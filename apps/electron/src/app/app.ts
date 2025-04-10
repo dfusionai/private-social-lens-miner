@@ -16,7 +16,7 @@ export default class App {
   static tray: Electron.Tray | null = null;
 
   static readonly uploadIntervalHours = 4;
-  static backgroundTaskInterval: NodeJS.Timeout | null = null; // Store the interval ID
+  static backgroundTaskInterval: NodeJS.Timer | null = null; // Store the interval ID
 
   static walletAddress = '';
   static encryptionKey = '';
@@ -340,9 +340,13 @@ export default class App {
       return App.minimizeToTray;
     });
 
-    app.on('will-quit', () => {
-      App.enableBackgroundTask = false;
-      store.set('enableBackgroundTask', false);
+    ipcMain.handle('get-background-task-interval-exists', () => {
+      return !!App.backgroundTaskInterval;
     });
+
+    // app.on('will-quit', () => {
+      // clearInterval(App.backgroundTaskInterval);
+      // App.backgroundTaskInterval = null;
+    // });
   }
 }
