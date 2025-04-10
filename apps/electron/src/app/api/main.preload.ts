@@ -32,6 +32,8 @@ contextBridge.exposeInMainWorld('electron', {
   getMinimizeToTray: () => ipcRenderer.invoke('get-minimize-to-tray'),
 
   onExecuteBackgroundTaskCode: (callback) => ipcRenderer.on('execute-background-task-code', callback),
+
+  getBackgroundTaskIntervalExists: () => ipcRenderer.invoke('get-background-task-interval-exists'),
   // onBackgroundTaskFailed: (callback) => ipcRenderer.on('background-task-failed', callback),
 
   // setUploadFrequency: (value) => ipcRenderer.send('set-upload-frequency', value),

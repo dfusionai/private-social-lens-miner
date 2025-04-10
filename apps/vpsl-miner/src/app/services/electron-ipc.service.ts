@@ -29,6 +29,7 @@ export class ElectronIpcService {
   public nextSubmissionTime = signal<Date | null>(null);
   public isAutoLaunchEnabled = signal<boolean>(true);
   public minimizeToTray = signal<boolean>(true);
+  public backgroundTaskIntervalExists = signal<boolean>(false);
 
   constructor() {
     if (isElectron()) {
@@ -72,6 +73,10 @@ export class ElectronIpcService {
     const minimizeToTray = await window.electron.getMinimizeToTray();
     console.log('init minimizeToTray', minimizeToTray);
     this.minimizeToTray.set(minimizeToTray);
+
+    const backgroundTaskIntervalExists = await window.electron.getBackgroundTaskIntervalExists();
+    console.log('init backgroundTaskIntervalExists', backgroundTaskIntervalExists);
+    this.backgroundTaskIntervalExists.set(backgroundTaskIntervalExists);
 
     await this.web3WalletService.calculateBalance();
   }
