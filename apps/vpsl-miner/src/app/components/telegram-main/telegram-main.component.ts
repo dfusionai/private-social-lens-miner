@@ -76,7 +76,6 @@ export class TelegramMainComponent implements AfterViewInit {
   }
 
   public async refresh() {
-    await this.telegramApiService.getDialogs();
     this.telegramApiService.initialisePreSelectedDialogs();
   }
 

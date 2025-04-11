@@ -5,7 +5,6 @@ import { TotalList } from 'telegram/Helpers';
 import { StringSession } from 'telegram/sessions';
 import { Dialog } from 'telegram/tl/custom/dialog';
 import { chatDto, fileDto } from '../models/social-truth';
-import { ERROR_MSG_GENERAL } from '../shared/constants';
 import { isElectron } from '../shared/helpers';
 import { AppConfigService } from './app-config.service';
 import { CryptographyService } from './cryptography.service';
@@ -58,9 +57,7 @@ export class TelegramApiService {
     // Immediately create a client using your application data
     this.telegramClient = new TelegramClient(this.SESSION, this.apiId, this.apiHash, { connectionRetries: 5 });
 
-    this.telegramClient.connect().then((telegramStoredSessionConnectResult) => {
-      // console.log('telegramStoredSessionConnectResult', telegramStoredSessionConnectResult);
-
+    this.telegramClient.connect().then((telegramStoredSessionConnectResult: boolean) => {
       this.checkAuthorization();
     });
 
@@ -151,10 +148,7 @@ export class TelegramApiService {
   }
 
   private checkAuthorization() {
-    this.telegramClient.checkAuthorization().then(async (isAuthorized) => {
-      // console.log('isAuthorized', isAuthorized);
-      this.isAuthorized = isAuthorized;
-
+    this.telegramClient.checkAuthorization().then(async (isAuthorized: boolean) => {
       if (isAuthorized) {
         this.telegramClient.addEventHandler(
           this.newMessageHandler.bind(this),
@@ -167,9 +161,10 @@ export class TelegramApiService {
         // });
         const currentUser = await this.getUser('me');
         this.userId.set(Number(currentUser?.fullUser.id));
-        await this.getDialogs();
-        this.initialisePreSelectedDialogs();
+        await this.initialisePreSelectedDialogs();
       }
+
+      this.isAuthorized = isAuthorized;
     }).catch((error) => {
       console.error(error);
     });
@@ -327,7 +322,6 @@ export class TelegramApiService {
       const errorText: string = authParts[1];
       const token: string = authParts[2];
       if (isValid) {
-        // TODO
         this.doTelegramSubmission(token);
       }
       else {
@@ -345,7 +339,9 @@ export class TelegramApiService {
     }
   }
 
-  public initialisePreSelectedDialogs() {
+  public async initialisePreSelectedDialogs() {
+    await this.getDialogs();
+
     if (this.electronIpcService.selectedChatIdsList().length > 0) {
       const preSelectedDialogs: Array<Dialog> = [];
       this.telegramDialogs().forEach(

@@ -25,7 +25,7 @@ contextBridge.exposeInMainWorld('electron', {
   setNextSubmissionTime: (value) => ipcRenderer.send('set-next-submission-time', value),
   getNextSubmissionTime: () => ipcRenderer.invoke('get-next-submission-time'),
 
-  setEnableAutoLaunch: (enable) => ipcRenderer.send('set-enable-auto-launch', enable),
+  setEnableAutoLaunch: (value) => ipcRenderer.send('set-enable-auto-launch', value),
   getEnableAutoLaunch: () => ipcRenderer.invoke('get-enable-auto-launch'),
 
   setMinimizeToTray: (value) => ipcRenderer.send('set-minimize-to-tray', value),
@@ -36,6 +36,8 @@ contextBridge.exposeInMainWorld('electron', {
   getBackgroundTaskIntervalExists: () => ipcRenderer.invoke('get-background-task-interval-exists'),
   // onBackgroundTaskFailed: (callback) => ipcRenderer.on('background-task-failed', callback),
 
-  // setUploadFrequency: (value) => ipcRenderer.send('set-upload-frequency', value),
+  setUploadFrequency: (value) => ipcRenderer.send('set-upload-frequency', value),
+  getUploadFrequency: () => ipcRenderer.invoke('get-upload-frequency')
+
   // setBackgroundSubmissionTaskCompletedTime: (value) => ipcRenderer.send('set-background-submission-task-completed-time', value),
 });
