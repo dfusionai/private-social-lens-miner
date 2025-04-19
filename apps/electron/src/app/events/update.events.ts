@@ -1,69 +1,79 @@
-import { app, autoUpdater, dialog, MessageBoxOptions } from 'electron';
-import { platform, arch } from 'os';
-import { updateServerUrl } from '../constants';
+import { app, dialog, MessageBoxOptions } from 'electron';
+import { autoUpdater } from 'electron-updater';
+import log from 'electron-log';
 import App from '../app';
+import { configureAutoUpdater } from '../config/auto-updater.config';
+
+log.transports.file.level = 'debug';
+autoUpdater.logger = log;
 
 export default class UpdateEvents {
-  // initialize auto update service - most be invoked only in production
   static initAutoUpdateService() {
-    const platform_arch =
-      platform() === 'win32' ? platform() : platform() + '_' + arch();
-    const version = app.getVersion();
-    const feed: Electron.FeedURLOptions = {
-      url: `${updateServerUrl}/update/${platform_arch}/${version}`,
-    };
+    log.info('Initializing auto-update service...');
+    log.info(`Current App version: ${app.getVersion()}`);
 
-    if (!App.isDevelopmentMode()) {
-      console.log('Initializing auto update service...\n');
+    // Configure auto-updater first
+    configureAutoUpdater();
+    log.info('Auto-updater configured');
 
-      autoUpdater.setFeedURL(feed);
+    if (!app.isPackaged) {
+      autoUpdater.forceDevUpdateConfig = true;
+      log.info('Running in development mode with dev-app-update config');
+    }
+
+    if (!App.isDevelopmentMode() || process.env.TEST_UPDATE === 'true') {
       UpdateEvents.checkForUpdates();
+    } else {
+      log.info('Skipping update check in development mode');
     }
   }
 
-  // check for updates - most be invoked after initAutoUpdateService() and only in production
   static checkForUpdates() {
-    if (!App.isDevelopmentMode() && autoUpdater.getFeedURL() !== '') {
-      autoUpdater.checkForUpdates();
-    }
+    log.info('Checking for updates...');
+    autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+      log.error('Failed to check for updates:', err);
+    });
   }
 }
 
-autoUpdater.on(
-  'update-downloaded',
-  (event, releaseNotes, releaseName, releaseDate) => {
-    const dialogOpts: MessageBoxOptions = {
-      type: 'info' as const,
-      buttons: ['Restart', 'Later'],
-      title: 'Application Update',
-      message: process.platform === 'win32' ? releaseNotes : releaseName,
-      detail:
-        'A new version has been downloaded. Restart the application to apply the updates.',
-    };
-
-    dialog.showMessageBox(dialogOpts).then((returnValue) => {
-      if (returnValue.response === 0) autoUpdater.quitAndInstall();
-    });
-  }
-);
-
 autoUpdater.on('checking-for-update', () => {
-  console.log('Checking for updates...\n');
+  log.info('Checking for updates...');
 });
 
-autoUpdater.on('update-available', () => {
-  console.log('New update available!\n');
+autoUpdater.on('update-available', (info) => {
+  log.info('Update available:', info.version);
 });
 
 autoUpdater.on('update-not-available', () => {
-  console.log('Up to date!\n');
+  log.info('No updates available');
 });
 
-autoUpdater.on('before-quit-for-update', () => {
-  console.log('Application update is about to begin...\n');
+autoUpdater.on('update-downloaded', (info) => {
+  log.info('Update downloaded:', info.version);
+
+  const dialogOpts: MessageBoxOptions = {
+    type: 'info',
+    buttons: ['Restart', 'Later'],
+    title: 'Update Ready',
+    message: `A new version (${info.version}) is ready.`,
+    detail: 'Restart the application to apply the updates.',
+  };
+
+  dialog.showMessageBox(dialogOpts).then((returnValue) => {
+    if (returnValue.response === 0) {
+      log.info('User clicked Restart - preparing to install update...');
+      
+      // Make sure we don't have any pending dialogs or operations
+      setTimeout(() => {
+        log.info('Installing update...');
+        autoUpdater.quitAndInstall(true, true);
+      }, 500);
+    } else {
+      log.info('User clicked Later - deferring update');
+    }
+  });
 });
 
-autoUpdater.on('error', (message) => {
-  console.error('There was a problem updating the application');
-  console.error(message, '\n');
+autoUpdater.on('error', (err) => {
+  log.error('Update error:', err);
 });
