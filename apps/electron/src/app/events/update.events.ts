@@ -22,14 +22,19 @@ export default class UpdateEvents {
     }
 
     if (!App.isDevelopmentMode()) {
+      // Check for updates immediately on startup
       UpdateEvents.checkForUpdates();
+
+      // Set up an interval to check for updates every hour
+      setInterval(UpdateEvents.checkForUpdates, 1000 * 60 * 60);
+      // setInterval(UpdateEvents.checkForUpdates, 1000 * 60 * 2);
     } else {
       log.info('Skipping update check in development mode');
     }
   }
 
   static checkForUpdates() {
-    log.info('Checking for updates...');
+    log.info('checkForUpdatesAndNotify');
     autoUpdater.checkForUpdatesAndNotify().catch((err) => {
       log.error('Failed to check for updates:', err);
     });
@@ -46,6 +51,7 @@ autoUpdater.on('update-available', (info) => {
 
 autoUpdater.on('update-not-available', () => {
   log.info('No updates available');
+  // App.mainWindow.webContents.send('execute-background-task-code', message);
 });
 
 autoUpdater.on('download-progress', (progressObj) => {

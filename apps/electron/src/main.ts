@@ -12,6 +12,7 @@ export default class Main {
     // No Squirrel events needed for nsis
     log.info('Initializing application...');
     log.info('Is packaged:', app.isPackaged);
+    app.setName('dFusion-dlp-miner');
   }
 
   static bootstrapApp() {

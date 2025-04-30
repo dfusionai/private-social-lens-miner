@@ -8,12 +8,13 @@ interface UpdateFeedConfig {
 }
 
 export const environment = {
-  production: false,
+  production: true,
   version: __BUILD_VERSION__,
+  dev: true,
   updateFeed: {
     provider: 's3' as const,
-    bucket: process.env.UPDATE_FEED_BUCKET || 'dfusionai',
-    path: process.env.UPDATE_FEED_PATH || '/updates',
-    region: process.env.UPDATE_FEED_REGION || 'ap-southeast-1'
+    bucket: 'dev-vana-private-social-lens',
+    path: '/updates',
+    region: 'us-east-1'
   } as UpdateFeedConfig
 };

@@ -1,9 +1,5 @@
-import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import { app } from 'electron';
-import { execFile } from 'child_process';
-import * as path from 'path';
-import * as fs from 'fs';
+import { autoUpdater } from 'electron-updater';
 import { environment } from '../../environments/environment';
 
 export function configureAutoUpdater() {
@@ -15,7 +11,10 @@ export function configureAutoUpdater() {
   autoUpdater.allowPrerelease = false;
   autoUpdater.disableWebInstaller = false;
   autoUpdater.allowDowngrade = false;
-  
+
   // Set update server URL from environment configuration
-  autoUpdater.setFeedURL(environment.updateFeed);
-} 
+  log.info('configureAutoUpdater environment', JSON.stringify(environment));
+  // https://www.electron.build/auto-update#quick-setup-guide
+  // don't set feed url
+  // autoUpdater.setFeedURL(environment.updateFeed);
+}

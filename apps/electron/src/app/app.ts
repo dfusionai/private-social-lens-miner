@@ -1,11 +1,14 @@
-import { BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, MenuItem, nativeImage, screen, shell, Tray } from 'electron';
 import * as Store from 'electron-store';
 import { extname, join } from 'path';
-import { format } from 'url';
 import { environment } from '../environments/environment';
 import { rendererAppName, rendererAppPort } from './constants';
 import * as http from 'http';
 import * as fs from 'fs';
+// import log from 'electron-log';
+// import UpdateEvents from './events/update.events';
+
+// log.transports.file.level = 'debug';
 
 const store = new Store() as any;
 
@@ -35,14 +38,18 @@ export default class App {
   // Create server local
   static localServer: http.Server;
 
-  private static createLocalServer() {
+  private static createLocalServer(): Promise<number> {
     return new Promise<number>((resolve) => {
+      const pathToServe = join(__dirname, 'renderer');
+
       const server = http.createServer((req, res) => {
-        let filePath = join(__dirname, '..', rendererAppName, req.url || 'index.html');
+        const requestedPath = req.url && req.url !== '/' ? req.url : '/index.html';
+        let filePath = join(pathToServe, requestedPath);
 
         fs.stat(filePath, (err, stats) => {
           if (err || !stats.isFile()) {
-            filePath = join(__dirname, '..', rendererAppName, 'index.html');
+            // fallback for Angular/SPA routes
+            filePath = join(pathToServe, 'index.html');
           }
 
           fs.readFile(filePath, (err, data) => {
@@ -52,7 +59,7 @@ export default class App {
               return;
             }
 
-            const ext = extname(filePath);
+            const ext = extname(filePath).toLowerCase();
             const contentType =
               {
                 '.html': 'text/html',
@@ -61,10 +68,16 @@ export default class App {
                 '.json': 'application/json',
                 '.png': 'image/png',
                 '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
                 '.gif': 'image/gif',
                 '.svg': 'image/svg+xml',
                 '.ico': 'image/x-icon',
-              }[ext] || 'text/plain';
+                '.woff': 'font/woff',
+                '.woff2': 'font/woff2',
+                '.ttf': 'font/ttf',
+                '.eot': 'application/vnd.ms-fontobject',
+                '.otf': 'font/otf',
+              }[ext] || 'application/octet-stream';
 
             res.writeHead(200, { 'Content-Type': contentType });
             res.end(data);
@@ -80,9 +93,15 @@ export default class App {
     });
   }
 
+
   public static isDevelopmentMode() {
     const isEnvironmentSet: boolean = 'ELECTRON_IS_DEV' in process.env;
+    // log.info('isEnvironmentSet:', isEnvironmentSet);
     const getFromEnvironment: boolean = parseInt(process.env.ELECTRON_IS_DEV, 10) === 1;
+    // log.info('process.env.ELECTRON_IS_DEV:', process.env.ELECTRON_IS_DEV);
+    // log.info('getFromEnvironment:', getFromEnvironment);
+
+    // log.info('environment.production:', environment.production);
 
     return isEnvironmentSet ? getFromEnvironment : !environment.production;
   }
@@ -194,6 +213,7 @@ export default class App {
     });
 
     App.createTray();
+    // App.createMenu();
   }
 
   private static async loadMainWindow() {
@@ -240,6 +260,34 @@ export default class App {
         App.mainWindow.show();
       }
     });
+  }
+
+  private static createMenu() {
+    const menuItem: MenuItem = {
+      checked: false,
+      commandId: 0,
+      enabled: true,
+      id: 'menu-item',
+      click: () => { console.log('') },
+      menu: null,
+      registerAccelerator: true,
+      sharingItem: null,
+      type: 'normal',
+
+      visible: true,
+      toolTip: null,
+      userAccelerator: null,
+      label: app.getName(),
+
+      role: 'about',
+      submenu: null,
+      sublabel: null,
+    };
+    const template = [
+      menuItem,
+    ];
+    const menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
   }
 
   private static startBackgroundTask() {
@@ -434,5 +482,11 @@ export default class App {
     ipcMain.handle('get-telegram-session', () => {
       return App.telegramSession;
     });
+
+    // ipcMain.on('check-for-update', (event, value) => {
+    //   UpdateEvents.checkForUpdates();
+    //   log.info('Manual check for updates triggered');
+    // });
+
   }
 }

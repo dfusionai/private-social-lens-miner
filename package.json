@@ -1,6 +1,6 @@
 {
   "name": "@dfusion-ai/source",
-  "version": "0.5.1",
+  "version": "2.0.0",
   "license": "MIT",
   "homepage": "https://www.dfusion.ai",
   "author": {
@@ -12,6 +12,7 @@
   "scripts": {
     "postinstall": "electron-builder install-app-deps"
   },
+  "main": "dist/apps/electron/main.js",
   "build": {
     "appId": "com.electron.dfusionVpslMiner",
     "productName": "dFusion-DLP-miner",
@@ -19,8 +20,10 @@
     "publish": [
       {
         "provider": "s3",
-        "bucket": "dfusionai",
-        "path": "/updates"
+        "bucket": "dev-vana-private-social-lens",
+        "path": "/updates",
+        "region": "us-east-1",
+        "acl": null
       }
     ],
     "mac": {
