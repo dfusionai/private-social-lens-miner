@@ -123,6 +123,11 @@ body {
     container-color: white,
     button-color: white,
   ));
+
+  @include mat.fab-overrides((
+    small-container-shape: 24px,
+    small-container-color: #4488f6,
+  ));
 }
 
 // ??

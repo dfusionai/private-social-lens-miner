@@ -30,6 +30,7 @@ export class ElectronIpcService {
   public isConfirmDisconnectWallet = signal<boolean>(false);
   public telegramSession = signal<string>('');
   public appVersion = signal<string>('');
+  public checkForUpdate = signal<boolean>(false);
 
   constructor() {
     if (isElectron()) {
@@ -93,6 +94,10 @@ export class ElectronIpcService {
     const version = await window.electron.getAppVersion();
     console.log('init appVersion', version);
     this.appVersion.set(version);
+
+    const checkForUpdate = await window.electron.getCheckForUpdate();
+    console.log('init checkForUpdates', checkForUpdate);
+    this.checkForUpdate.set(checkForUpdate);
 
     await this.web3WalletService.calculateBalance();
   }
@@ -169,6 +174,11 @@ export class ElectronIpcService {
   public setTelegramSession(value: string) {
     this.telegramSession.set(value);
     window.electron.setTelegramSession(this.telegramSession());
+  }
+
+  public setCheckForUpdate(value: boolean) {
+    this.checkForUpdate.set(value);
+    window.electron.setCheckForUpdate(this.checkForUpdate());
   }
 
   public switchWallet() {
