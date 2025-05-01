@@ -5,8 +5,8 @@ import { environment } from '../environments/environment';
 import { rendererAppName, rendererAppPort } from './constants';
 import * as http from 'http';
 import * as fs from 'fs';
+import UpdateEvents from './events/update.events';
 // import log from 'electron-log';
-// import UpdateEvents from './events/update.events';
 
 // log.transports.file.level = 'debug';
 
@@ -34,6 +34,7 @@ export default class App {
   static minimizeToTray = true;
   static uploadFrequency = 4;
   static telegramSession = '';
+  static checkForUpdate = false; // manual check for updates
 
   // Create server local
   static localServer: http.Server;
@@ -147,6 +148,7 @@ export default class App {
     App.minimizeToTray = store.get('minimizeToTray') ?? true;
     App.uploadFrequency = store.get('uploadFrequency') ?? 4;
     App.telegramSession = store.get('telegramSession') ?? '';
+    // App.checkForUpdate // manual check always init to false always
 
     if (rendererAppName) {
       App.initMainWindow();
@@ -341,6 +343,11 @@ export default class App {
     App.application.on('ready', App.onReady); // App is ready to load data
     App.application.on('activate', App.onActivate); // App is activated
 
+    // app.on('will-quit', () => {
+    //   clearInterval(App.backgroundTaskInterval);
+    //   App.backgroundTaskInterval = null;
+    // });
+
     // Listen for changes from the render/UI
 
     ipcMain.on('set-wallet-address', (event, value) => {
@@ -468,11 +475,6 @@ export default class App {
       return App.uploadFrequency;
     });
 
-    // app.on('will-quit', () => {
-    // clearInterval(App.backgroundTaskInterval);
-    // App.backgroundTaskInterval = null;
-    // });
-
     ipcMain.on('set-telegram-session', (event, value) => {
       App.telegramSession = value;
       store.set('telegramSession', value);
@@ -483,10 +485,18 @@ export default class App {
       return App.telegramSession;
     });
 
-    // ipcMain.on('check-for-update', (event, value) => {
-    //   UpdateEvents.checkForUpdates();
-    //   log.info('Manual check for updates triggered');
-    // });
+    ipcMain.on('set-check-for-update', (event, value) => {
+      App.checkForUpdate = value;
+      store.set('checkForUpdate', value);
+      console.log('main process: set-check-for-update:', value);
 
+      if (App.checkForUpdate) {
+        UpdateEvents.checkForUpdates();
+      }
+    });
+
+    ipcMain.handle('get-check-for-update', () => {
+      return App.checkForUpdate;
+    });
   }
 }

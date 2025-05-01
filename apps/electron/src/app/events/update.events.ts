@@ -37,39 +37,63 @@ export default class UpdateEvents {
     log.info('checkForUpdatesAndNotify');
     autoUpdater.checkForUpdatesAndNotify().catch((err) => {
       log.error('Failed to check for updates:', err);
+      App.mainWindow.webContents.send('send-update-message', `Failed to check for updates. Try again later.`);
+      // App.checkForUpdate = false;
     });
   }
 }
 
 autoUpdater.on('checking-for-update', () => {
   log.info('Checking for updates...');
+
+  if (App.checkForUpdate) {
+    App.mainWindow.webContents.send('send-update-message', `Checking for updates.`);
+  }
 });
 
 autoUpdater.on('update-available', (info) => {
   log.info('Update available:', info.version);
+
+  if (App.checkForUpdate) {
+    App.mainWindow.webContents.send('send-update-message', `Update available. Downloading.`);
+  }
 });
 
 autoUpdater.on('update-not-available', () => {
   log.info('No updates available');
-  // App.mainWindow.webContents.send('execute-background-task-code', message);
+
+  if (App.checkForUpdate) {
+    App.mainWindow.webContents.send('send-update-message', `There is no new update.`);
+    // App.checkForUpdate = false;
+  }
 });
 
 autoUpdater.on('download-progress', (progressObj) => {
   log.info('Download progress:', progressObj);
+
+  if (App.checkForUpdate) {
+    App.mainWindow.webContents.send('send-update-message', `Downloading update: ${Math.round(progressObj.percent)}%`);
+  }
 });
 
 autoUpdater.on('update-downloaded', (info) => {
   log.info('Update downloaded:', info.version);
+  if (App.checkForUpdate) {
+    App.mainWindow.webContents.send('send-update-message', `Download complete.`);
+    // App.checkForUpdate = false;
+  }
 
   const dialogOpts: MessageBoxOptions = {
     type: 'info',
     buttons: ['Restart', 'Later'],
     title: 'Update Ready',
-    message: `A new version (${info.version}) is ready.`,
+    message: `A new version (${info.version}) is ready to be installed.`,
     detail: 'Restart the application to apply the updates.',
+    cancelId: 1, // match the index of the "Later" button
   };
 
   dialog.showMessageBox(dialogOpts).then((returnValue) => {
+    log.info(`returnValue: ${JSON.stringify(returnValue)}`);
     if (returnValue.response === 0) {
       log.info('User clicked Restart - preparing to install update...');
 
@@ -86,4 +110,9 @@ autoUpdater.on('update-downloaded', (info) => {
 
 autoUpdater.on('error', (err) => {
   log.error('Update error:', err);
+
+  if (App.checkForUpdate) {
+    App.mainWindow.webContents.send('send-update-message', `Update failed. Try again later.`);
+    // App.checkForUpdate = false;
+  }
 });
