@@ -20,7 +20,7 @@
     "publish": [
       {
         "provider": "s3",
-        "bucket": "dev-vana-private-social-lens",
+        "bucket": "dfusionai-dlp-miner",
         "path": "/updates",
         "region": "us-east-1",
         "acl": null
@@ -29,8 +29,12 @@
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
-        "dmg",
-        "zip"
+        {
+          "target": "default",
+          "arch": [
+            "universal"
+          ]
+        }
       ],
       "artifactName": "${productName}-${version}.${ext}",
       "type": "distribution",
