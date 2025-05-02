@@ -71,9 +71,7 @@ autoUpdater.on('update-not-available', () => {
 autoUpdater.on('download-progress', (progressObj) => {
   log.info('Download progress:', progressObj);
 
-  if (App.checkForUpdate) {
-    App.mainWindow.webContents.send('send-update-message', `Downloading update: ${Math.round(progressObj.percent)}%`);
-  }
+  App.mainWindow.webContents.send('send-update-message', `Downloading update: ${Math.round(progressObj.percent)}%`);
 });
 
 autoUpdater.on('update-downloaded', (info) => {
