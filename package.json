@@ -20,7 +20,7 @@
     "publish": [
       {
         "provider": "s3",
-        "bucket": "dev-vana-private-social-lens",
+        "bucket": "dfusionai-dlp-miner",
         "path": "/updates",
         "region": "us-east-1"
       }
