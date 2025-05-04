@@ -55,7 +55,8 @@
       "target": [
         "nsis"
       ],
-      "artifactName": "${productName}-${version}.${ext}"
+      "artifactName": "${productName}-${version}.${ext}",
+      "sign": false
     },
     "linux": {
       "target": [
@@ -65,7 +66,8 @@
       "executableName": "dfusion-dlp-miner",
       "artifactName": "${productName}-${version}.${ext}",
       "category": "Utility",
-      "description": "dFusion Private Social Lens DLP miner application."
+      "description": "dFusion Private Social Lens DLP miner application.",
+      "sign": false
     },
     "files": [
       "dist/apps/electron/**/*",
