@@ -21,7 +21,7 @@
       {
         "provider": "s3",
         "bucket": "dev-vana-private-social-lens",
-        "path": "/updates",
+        "path": "updates",
         "region": "us-east-1",
         "acl": null
       }
