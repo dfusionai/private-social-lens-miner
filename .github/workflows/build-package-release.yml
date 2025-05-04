@@ -104,7 +104,7 @@ jobs:
           path: |
             ${{ matrix.os == 'windows-latest' && format('dist/executables/dFusion-DLP-miner-{0}.exe', steps.get_version.outputs.version) }}
             ${{ matrix.os == 'ubuntu-latest' && format('dist/executables/dFusion-DLP-miner-{0}.AppImage', steps.get_version.outputs.version) }}
-            ${{ matrix.os == 'macos-latest' && format('dist/executables/dFusion-DLP-miner-{0}-arm64.dmg', steps.get_version.outputs.version) }}
+            ${{ matrix.os == 'macos-latest' && format('dist/executables/dFusion-DLP-miner-{0}.dmg', steps.get_version.outputs.version) }}
 
       - name: Debug directory structure
         run: |
