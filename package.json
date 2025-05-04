@@ -1,6 +1,6 @@
 {
   "name": "@dfusion-ai/source",
-  "version": "3.0.0",
+  "version": "1.0.0",
   "license": "MIT",
   "homepage": "https://www.dfusion.ai",
   "author": {
@@ -28,14 +28,7 @@
     ],
     "mac": {
       "category": "public.app-category.productivity",
-      "target": [
-        {
-          "target": "default",
-          "arch": [
-            "universal"
-          ]
-        }
-      ],
+      "target": ["dmg", "zip"],
       "artifactName": "${productName}-${version}.${ext}",
       "type": "distribution",
       "hardenedRuntime": true,
