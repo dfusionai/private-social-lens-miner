@@ -23,25 +23,20 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-latest]
-        # os: [windows-latest]
-        # os: [ubuntu-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
 
         include:
-          # - os: windows-latest
-          #   platform: win
-          #   artifact-name: windows-build
-          #   executable-path: dist/executables/dFusion-DLP-miner-3.0.0.exe # TODO version
+          - os: windows-latest
+            platform: win
+            artifact-name: windows-build
 
-          # - os: ubuntu-latest
-          #   platform: linux
-          #   artifact-name: linux-build
-          #   executable-path: dist/executables/dFusion-DLP-miner-0.5.0.AppImage # TODO version
+          - os: ubuntu-latest
+            platform: linux
+            artifact-name: linux-build
 
           - os: macos-latest
             platform: mac
             artifact-name: macos-build
-            executable-path: dist/executables/dFusion-DLP-miner-1.0.0-arm64.dmg # TODO version
 
     runs-on: ${{ matrix.os }}
 
@@ -70,11 +65,17 @@ jobs:
         id: get_version
         run: |
           VERSION=$(node -e "console.log(require('./package.json').version)")
+          if [[ -z "$VERSION" ]]; then
+            echo "Failed to extract version from package.json"
+            exit 1
+          fi
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "Invalid version format: $VERSION"
+            exit 1
+          fi
+          echo "Version extracted: $VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
         shell: bash
-
-      - name: Print extracted version
-        run: echo "Version is ${{ steps.get_version.outputs.version }}"
 
       - name: Install dependencies
         run: |
@@ -100,7 +101,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact-name }}
-          path: ${{ matrix.executable-path }}
+          path: |
+            ${{ matrix.os == 'windows-latest' && format('dist/executables/dFusion-DLP-miner-{0}.exe', steps.get_version.outputs.version) }}
+            ${{ matrix.os == 'ubuntu-latest' && format('dist/executables/dFusion-DLP-miner-{0}.AppImage', steps.get_version.outputs.version) }}
+            ${{ matrix.os == 'macos-latest' && format('dist/executables/dFusion-DLP-miner-{0}-arm64.dmg', steps.get_version.outputs.version) }}
 
       - name: Debug directory structure
         run: |
