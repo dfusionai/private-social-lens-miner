@@ -1,6 +1,6 @@
 {
   "name": "@dfusion-ai/source",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "license": "MIT",
   "homepage": "https://www.dfusion.ai",
   "author": {
@@ -66,8 +66,7 @@
       "executableName": "dfusion-dlp-miner",
       "artifactName": "${productName}-${version}.${ext}",
       "category": "Utility",
-      "description": "dFusion Private Social Lens DLP miner application.",
-      "sign": false
+      "description": "dFusion Private Social Lens DLP miner application."
     },
     "files": [
       "dist/apps/electron/**/*",
