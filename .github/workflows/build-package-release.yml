@@ -47,12 +47,6 @@ jobs:
 
       - name: Setup Python environment (macOS)
         if: matrix.os == 'macos-latest'
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: |
           brew install python@3.10
           export PATH="/opt/homebrew/opt/python@3.10/libexec/bin:$PATH"
@@ -60,7 +54,6 @@ jobs:
           source venv/bin/activate
           python3.10 --version
           python3.10 -m pip install --upgrade pip setuptools wheel
-          export CSC_IDENTITY_AUTO_DISCOVERY=false
 
       - name: Extract version from package.json
         id: get_version
@@ -109,6 +102,13 @@ jobs:
         shell: bash
 
       - name: Publish Electron app ${{ matrix.platform }}
+        if: matrix.os == 'macos-latest'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: npx electron-builder --publish always
         shell: bash
 
