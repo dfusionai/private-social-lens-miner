@@ -29,6 +29,8 @@ export class ElectronIpcService {
   public uploadFrequency = signal<number>(4);
   public isConfirmDisconnectWallet = signal<boolean>(false);
   public telegramSession = signal<string>('');
+  public appVersion = signal<string>('');
+  public checkForUpdate = signal<boolean>(false);
 
   constructor() {
     if (isElectron()) {
@@ -88,6 +90,14 @@ export class ElectronIpcService {
     const telegramSession = await window.electron.getTelegramSession();
     console.log('init telegramSession', telegramSession);
     this.telegramSession.set(telegramSession);
+
+    const version = await window.electron.getAppVersion();
+    console.log('init appVersion', version);
+    this.appVersion.set(version);
+
+    const checkForUpdate = await window.electron.getCheckForUpdate();
+    console.log('init checkForUpdates', checkForUpdate);
+    this.checkForUpdate.set(checkForUpdate);
 
     await this.web3WalletService.calculateBalance();
   }
@@ -166,6 +176,11 @@ export class ElectronIpcService {
     window.electron.setTelegramSession(this.telegramSession());
   }
 
+  public setCheckForUpdate(value: boolean) {
+    this.checkForUpdate.set(value);
+    window.electron.setCheckForUpdate(this.checkForUpdate());
+  }
+
   public switchWallet() {
     if (this.walletType() === WalletType.HOT_WALLET) {
       const dialogRef = this.matDialog.open(ConfirmWalletDialogComponent, {
@@ -191,5 +206,14 @@ export class ElectronIpcService {
     } catch (error) {
       console.error('Error disconnecting wallet:', error);
     }
+  }
+
+  public async getAppVersion(): Promise<string> {
+    if (isElectron()) {
+      const version = await window.electron.getAppVersion();
+      this.appVersion.set(version);
+      return version;
+    }
+    return '';
   }
 }
