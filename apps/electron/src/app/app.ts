@@ -97,13 +97,7 @@ export default class App {
 
   public static isDevelopmentMode() {
     const isEnvironmentSet: boolean = 'ELECTRON_IS_DEV' in process.env;
-    // log.info('isEnvironmentSet:', isEnvironmentSet);
     const getFromEnvironment: boolean = parseInt(process.env.ELECTRON_IS_DEV, 10) === 1;
-    // log.info('process.env.ELECTRON_IS_DEV:', process.env.ELECTRON_IS_DEV);
-    // log.info('getFromEnvironment:', getFromEnvironment);
-
-    // log.info('environment.production:', environment.production);
-
     return isEnvironmentSet ? getFromEnvironment : !environment.production;
   }
 
@@ -148,7 +142,7 @@ export default class App {
     App.minimizeToTray = store.get('minimizeToTray') ?? true;
     App.uploadFrequency = store.get('uploadFrequency') ?? 4;
     App.telegramSession = store.get('telegramSession') ?? '';
-    // App.checkForUpdate // manual check always init to false always
+    // App.checkForUpdate // manual check init to false always
 
     if (rendererAppName) {
       App.initMainWindow();

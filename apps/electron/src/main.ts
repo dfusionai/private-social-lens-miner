@@ -10,8 +10,8 @@ log.transports.file.level = 'debug';
 export default class Main {
   static initialize() {
     // No Squirrel events needed for nsis
-    log.info('Initializing application...');
-    log.info('Is packaged:', app.isPackaged);
+    // log.info('Initializing application...');
+    // log.info('Is packaged:', app.isPackaged);
     app.setName('dFusion-dlp-miner');
   }
 
@@ -22,9 +22,9 @@ export default class Main {
   static bootstrapAppEvents() {
     ElectronEvents.bootstrapElectronEvents();
 
-    log.info('Application version:', app.getVersion());
-    log.info('App path:', app.getAppPath());
-    log.info('Develop Mode:', App.isDevelopmentMode());
+    // log.info('Application version:', app.getVersion());
+    // log.info('App path:', app.getAppPath());
+    // log.info('Develop Mode:', App.isDevelopmentMode());
 
     // Initialize auto-updater in production or test mode
     if (!App.isDevelopmentMode()) {
