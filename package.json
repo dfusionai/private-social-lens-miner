@@ -1,6 +1,6 @@
 {
-  "name": "@dfusion-ai/source",
-  "version": "2.1.0",
+  "name": "electron",
+  "version": "2.2.0",
   "license": "MIT",
   "homepage": "https://www.dfusion.ai",
   "author": {
