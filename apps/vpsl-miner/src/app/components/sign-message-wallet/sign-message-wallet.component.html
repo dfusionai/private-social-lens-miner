@@ -10,7 +10,19 @@
           your data.
         </span>
       </div>
-      <button class="dfus-blue-btn dfus-btn-icon-group w-full h-16" (click)="signMessage()">Sign Message <img src="icons/chevron_right.svg" alt="Right chevron icon" /></button>
+
+      <button class="dfus-blue-btn dfus-btn-icon-group w-full h-16" (click)="signMessage()">
+        Sign Message <img src="icons/chevron_right.svg" alt="Right chevron icon" />
+      </button>
+
+      @if (showHint && !showError) {
+        <p class="text-left">Signature request sent. Please check your wallet to approve.</p>
+      }
+
+      @if (showError && !showHint) {
+        <p class="text-[#FF8389] text-left">The request was not signed. You'll need to approve to continue.</p>
+      }
+
     </div>
   </div>
 </div>

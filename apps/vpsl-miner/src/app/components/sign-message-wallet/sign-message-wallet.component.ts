@@ -16,6 +16,9 @@ export class SignMessageWalletComponent {
   private readonly electronIpcService: ElectronIpcService = inject(ElectronIpcService);
   private readonly web3WalletService: any = inject(Web3WalletService);
 
+  public showHint = false;
+  public showError = false;
+
   constructor() {
     effect(async () => {
       const validWalletAddress = this.electronIpcService.walletAddress();
@@ -30,8 +33,17 @@ export class SignMessageWalletComponent {
     });
   }
   public async signMessage() {
-    const walletAddress = this.electronIpcService.walletAddress();
-    const signature = await this.existingWalletService.signMessage(walletAddress);
-    this.electronIpcService.setEncryptionKey(signature);
+    try {
+      this.showHint = true;
+      this.showError = false;
+      const walletAddress = this.electronIpcService.walletAddress();
+      const signature = await this.existingWalletService.signMessage(walletAddress);
+      this.electronIpcService.setEncryptionKey(signature);
+    }
+    catch (error) {
+      this.showError = true;
+      this.showHint = false;
+      console.error('Error signing message:', error);
+    }
   }
 }
