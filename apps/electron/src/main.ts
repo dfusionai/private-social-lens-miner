@@ -25,11 +25,12 @@ export default class Main {
     // log.info('Application version:', app.getVersion());
     // log.info('App path:', app.getAppPath());
     // log.info('Develop Mode:', App.isDevelopmentMode());
+  }
 
-    // Initialize auto-updater in production or test mode
+  static initAutoUpdater() {
     if (!App.isDevelopmentMode()) {
       log.info('Starting auto-update service...');
-      UpdateEvents.initAutoUpdateService();
+      UpdateEvents.initAutoUpdateService(); // Now called after App's onReady
     } else {
       log.info('Skipping auto-update in development mode');
     }
@@ -40,3 +41,7 @@ export default class Main {
 Main.initialize();
 Main.bootstrapApp();
 Main.bootstrapAppEvents();
+
+app.on('ready', () => {
+  Main.initAutoUpdater();
+});
