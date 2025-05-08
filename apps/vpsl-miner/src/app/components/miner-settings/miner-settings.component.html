@@ -11,9 +11,18 @@
     <div class="flex flex-col gap-y-4 bg-[#0A0D14] rounded-xl p-4">
 
       <div class="flex flex-row justify-between items-center">
-        <span>{{checkUpdateDescription}}</span>
+        <span>
+          {{checkUpdateDescription}}
+          @if (checkForUpdate()) {
+            <span class="ellipsis-anim">
+              <span>.</span>
+              <span>.</span>
+              <span>.</span>
+            </span>
+          }
+        </span>
 
-        <button mat-mini-fab class="mr-4" (click)="doCheckForUpdate()">
+        <button mat-mini-fab class="mr-4" (click)="doCheckForUpdate()" [disabled]="checkForUpdate()">
           <mat-icon>sync</mat-icon>
         </button>
       </div>
