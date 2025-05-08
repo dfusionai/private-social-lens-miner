@@ -31,7 +31,7 @@ export class MinerAppContainerComponent implements OnInit {
       const matDialogConfig: MatDialogConfig = {
         disableClose: false,
         height: '550px',
-        width: '750px'
+        width: '800px'
       }
       this.dialog.open(
         MinerSettingsComponent,
