@@ -1,9 +1,10 @@
 import { Component, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { ethers } from "ethers";
+import { ethers } from 'ethers';
 import { ElectronIpcService } from '../../services/electron-ipc.service';
 import { Web3WalletService } from '../../services/web3-wallet.service';
 import { ENCRYPTION_SEED } from '../../shared/constants';
+
 
 @Component({
   selector: 'app-hot-wallet',
@@ -16,7 +17,6 @@ export class HotWalletComponent {
   private readonly electronIpcService: ElectronIpcService = inject(ElectronIpcService);
   private readonly web3WalletService: Web3WalletService = inject(Web3WalletService);
   private readonly router: Router = inject(Router);
-
 
   public readonly validWalletAndEncryptionKey = effect(() => {
     const validWalletAddress = this.electronIpcService.walletAddress();
@@ -88,14 +88,14 @@ export class HotWalletComponent {
       this.showVerification = false;
 
       if (this.wallet) {
-        this.wallet.signMessage(ENCRYPTION_SEED).then(
-          async (res: string) => {
+        this.wallet
+          .signMessage(ENCRYPTION_SEED)
+          .then(async (res: string) => {
             this.electronIpcService.setWalletAddress(this.wallet!.address);
             this.electronIpcService.setEncryptionKey(res);
-          }
-        ).catch((err: any) => console.error('Failed to create encryption key', err));
-      }
-      else {
+          })
+          .catch((err: any) => console.error('Failed to create encryption key', err));
+      } else {
         console.error('Wallet not created');
       }
     }
