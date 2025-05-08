@@ -18,14 +18,14 @@ export class HotWalletComponent {
   private readonly router: Router = inject(Router);
 
 
-  public readonly validWalletAndEncryptionKey = effect(() => {
-    const validWalletAddress = this.electronIpcService.walletAddress();
-    const validEncryptionKey = this.electronIpcService.encryptionKey();
+  // public readonly validWalletAndEncryptionKey = effect(() => {
+  //   const validWalletAddress = this.electronIpcService.walletAddress();
+  //   const validEncryptionKey = this.electronIpcService.encryptionKey();
 
-    if (validWalletAddress && validEncryptionKey) {
-      this.router.navigate(['app/miner']);
-    }
-  });
+  //   if (validWalletAddress && validEncryptionKey) {
+  //     this.router.navigate(['app/miner']);
+  //   }
+  // });
 
   public showWalletSetup = true;
   public showWalletGeneration = false;
