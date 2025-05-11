@@ -36,25 +36,37 @@ export default class UpdateEvents {
   static checkForUpdates() {
     autoUpdater.checkForUpdatesAndNotify().catch((err) => {
       log.error('Failed to check for updates:', err);
-      App.mainWindow.webContents.send('send-update-message', `Failed to check for updates. Try again later.`);
-      // App.checkForUpdate = false;
+      App.checkForUpdate = false;
+      App.mainWindow.webContents.send('send-update-message', `Failed to check for updates. Try again later`);
     });
   }
 }
 
 autoUpdater.on('checking-for-update', () => {
   log.info('Checking for updates...');
-  App.mainWindow.webContents.send('send-update-message', `Checking for updates.`);
+  App.checkForUpdate = true;
+  App.mainWindow.webContents.send('send-update-message', `Checking for updates`);
 });
 
 autoUpdater.on('update-available', (info) => {
   log.info('Update available:', info.version);
-  App.mainWindow.webContents.send('send-update-message', `Update available. Downloading.`);
+  App.mainWindow.webContents.send('send-update-message', `Update available. Downloading`);
 });
 
 autoUpdater.on('update-not-available', () => {
   log.info('No updates available');
-  App.mainWindow.webContents.send('send-update-message', `There is no new update.`);
+  App.checkForUpdate = false;
+  App.mainWindow.webContents.send('send-update-message', `NO_NEW_UPDATE`);
+
+  // const dialogOpts: MessageBoxOptions = {
+  //   type: 'info',
+  //   buttons: ['OK'],
+  //   title: `You're Up-to-Date`,
+  //   message: `Your dFusion DLP Miner is running the newest version`,
+  //   cancelId: 1, // match the index of the "Later" button
+  // };
+
+  // dialog.showMessageBox(dialogOpts).then();
 });
 
 autoUpdater.on('download-progress', (progressObj) => {
@@ -64,7 +76,8 @@ autoUpdater.on('download-progress', (progressObj) => {
 
 autoUpdater.on('update-downloaded', (info) => {
   log.info('Update downloaded:', info.version);
-  App.mainWindow.webContents.send('send-update-message', `Download complete.`);
+  App.checkForUpdate = false;
+  App.mainWindow.webContents.send('send-update-message', `Download complete`);
 
   const dialogOpts: MessageBoxOptions = {
     type: 'info',

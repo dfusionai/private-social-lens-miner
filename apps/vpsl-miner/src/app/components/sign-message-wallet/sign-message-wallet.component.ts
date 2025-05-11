@@ -19,6 +19,10 @@ export class SignMessageWalletComponent {
   public showHint = false;
   public showError = false;
 
+  public get validNetwork(): boolean {
+    return this.existingWalletService.selectedNetworkId() === this.existingWalletService.vanaNetwork.id.toString();
+  }
+
   constructor() {
     effect(async () => {
       const validWalletAddress = this.electronIpcService.walletAddress();

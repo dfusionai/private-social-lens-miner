@@ -35,11 +35,16 @@ export class MinerSettingsComponent {
       window.electron.onSendUpdateMessage(async (event: any, message: any) => {
         console.warn('Received message from main process:', message);
 
+        if (message === 'NO_NEW_UPDATE') {
+          this.snackBar.open(
+            `Your dFusion DLP Miner is running the newest version.`,
+            `OK`,
+            { duration: 1000 * 5 }
+          );
+        }
+
         const checkForUpdate = await window.electron.getCheckForUpdate();
         this.checkForUpdate.set(checkForUpdate);
-        console.log('this.checkForUpdate', this.checkForUpdate());
-        console.log('this.electronIpcService.checkForUpdate', this.electronIpcService.checkForUpdate());
-
         this.checkUpdateDescription = this.checkForUpdate() ? message : this.defaultUpdateDescription;
       });
     }
