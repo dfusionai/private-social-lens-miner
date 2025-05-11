@@ -18,16 +18,6 @@ export class HotWalletComponent {
   private readonly web3WalletService: Web3WalletService = inject(Web3WalletService);
   private readonly router: Router = inject(Router);
 
-
-  // public readonly validWalletAndEncryptionKey = effect(() => {
-  //   const validWalletAddress = this.electronIpcService.walletAddress();
-  //   const validEncryptionKey = this.electronIpcService.encryptionKey();
-
-  //   if (validWalletAddress && validEncryptionKey) {
-  //     this.router.navigate(['app/miner']);
-  //   }
-  // });
-
   public showWalletSetup = true;
   public showWalletGeneration = false;
   public showVerification = false;
