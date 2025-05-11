@@ -1,7 +1,7 @@
 declare const __BUILD_VERSION__: string;
 
 export const environment = {
-  production: true,
+  production: false,
   version: __BUILD_VERSION__,
   dev: true,
 };
