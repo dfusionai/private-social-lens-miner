@@ -35,6 +35,7 @@ import { WalletConnectionComponent } from './components/wallet-connection/wallet
 import { WalletComponent } from './components/wallet/wallet.component';
 import { PhoneInputDirective } from './directives/phone-input.directive';
 import { AppConfigService } from './services/app-config.service';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @NgModule({
   schemas: [
@@ -79,6 +80,7 @@ import { AppConfigService } from './services/app-config.service';
     MatDividerModule,
     MatSnackBarModule,
     MatSidenavModule,
+    MatTooltipModule,
     ClipboardModule,
     // MatStepperModule
   ],
