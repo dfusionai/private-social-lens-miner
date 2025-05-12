@@ -1,9 +1,14 @@
-import { BrowserWindow, ipcMain, Menu, nativeImage, screen, shell, Tray } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, MenuItem, nativeImage, screen, shell, Tray } from 'electron';
 import * as Store from 'electron-store';
-import { join } from 'path';
-import { format } from 'url';
+import { extname, join } from 'path';
 import { environment } from '../environments/environment';
 import { rendererAppName, rendererAppPort } from './constants';
+import * as http from 'http';
+import * as fs from 'fs';
+import UpdateEvents from './events/update.events';
+// import log from 'electron-log';
+
+// log.transports.file.level = 'debug';
 
 const store = new Store() as any;
 
@@ -19,6 +24,7 @@ export default class App {
 
   static walletAddress = '';
   static encryptionKey = '';
+  static walletType = '';
   static uploadAllChats = true;
   static selectedChatIdsList = [];
   static enableBackgroundTask = false; // Flag to control the background task
@@ -27,15 +33,78 @@ export default class App {
   static enableAutoLaunch = true;
   static minimizeToTray = true;
   static uploadFrequency = 4;
+  static telegramSession = '';
+  static checkForUpdate = false; // manual check for updates
+
+  // Create server local
+  static localServer: http.Server;
+
+  private static createLocalServer() {
+    return new Promise<number>((resolve) => {
+      const pathToServe = join(__dirname, 'renderer');
+
+      const server = http.createServer((req, res) => {
+        const requestedPath = req.url && req.url !== '/' ? req.url : '/index.html';
+        let filePath = join(pathToServe, requestedPath);
+
+        fs.stat(filePath, (err, stats) => {
+          if (err || !stats.isFile()) {
+            // fallback for Angular/SPA routes
+            filePath = join(pathToServe, 'index.html');
+          }
+
+          fs.readFile(filePath, (err, data) => {
+            if (err) {
+              res.writeHead(404);
+              res.end();
+              return;
+            }
+
+            const ext = extname(filePath).toLowerCase();
+            const contentType =
+              {
+                '.html': 'text/html',
+                '.js': 'text/javascript',
+                '.css': 'text/css',
+                '.json': 'application/json',
+                '.png': 'image/png',
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.gif': 'image/gif',
+                '.svg': 'image/svg+xml',
+                '.ico': 'image/x-icon',
+                '.woff': 'font/woff',
+                '.woff2': 'font/woff2',
+                '.ttf': 'font/ttf',
+                '.eot': 'application/vnd.ms-fontobject',
+                '.otf': 'font/otf',
+              }[ext] || 'application/octet-stream';
+
+            res.writeHead(200, { 'Content-Type': contentType });
+            res.end(data);
+          });
+        });
+      });
+
+      server.listen(0, () => {
+        const port = (server.address() as any).port;
+        App.localServer = server;
+        resolve(port);
+      });
+    });
+  }
+
 
   public static isDevelopmentMode() {
     const isEnvironmentSet: boolean = 'ELECTRON_IS_DEV' in process.env;
     const getFromEnvironment: boolean = parseInt(process.env.ELECTRON_IS_DEV, 10) === 1;
-
     return isEnvironmentSet ? getFromEnvironment : !environment.production;
   }
 
   private static onWindowAllClosed() {
+    if (App.localServer) {
+      App.localServer.close();
+    }
     if (process.platform !== 'darwin') {
       App.application.quit();
     }
@@ -63,6 +132,7 @@ export default class App {
 
     App.walletAddress = store.get('walletAddress') ?? '';
     App.encryptionKey = store.get('encryptionKey') ?? '';
+    App.walletType = store.get('walletType') ?? '';
     App.uploadAllChats = store.get('uploadAllChats') ?? true;
     App.selectedChatIdsList = store.get('selectedChatIdsList') ?? [];
     App.enableBackgroundTask = store.get('enableBackgroundTask') ?? false;
@@ -71,6 +141,8 @@ export default class App {
     App.enableAutoLaunch = store.get('enableAutoLaunch') ?? true;
     App.minimizeToTray = store.get('minimizeToTray') ?? true;
     App.uploadFrequency = store.get('uploadFrequency') ?? 4;
+    App.telegramSession = store.get('telegramSession') ?? '';
+    // App.checkForUpdate // manual check init to false always
 
     if (rendererAppName) {
       App.initMainWindow();
@@ -118,8 +190,8 @@ export default class App {
     // });
     App.mainWindow.webContents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url);
-      return { action: 'deny' }
-    })
+      return { action: 'deny' };
+    });
 
     App.mainWindow.on('close', (event) => {
       if (App.minimizeToTray) {
@@ -137,21 +209,17 @@ export default class App {
     });
 
     App.createTray();
+    // App.createMenu();
   }
 
-  private static loadMainWindow() {
+  private static async loadMainWindow() {
     // load the index.html of the app.
     if (!App.application.isPackaged) {
       App.mainWindow.loadURL(`http://localhost:${rendererAppPort}`);
       App.mainWindow.webContents.openDevTools();
     } else {
-      App.mainWindow.loadURL(
-        format({
-          pathname: join(__dirname, '..', rendererAppName, 'index.html'),
-          protocol: 'file:',
-          slashes: true,
-        }),
-      );
+      const port = await App.createLocalServer();
+      App.mainWindow.loadURL(`http://localhost:${port}`);
     }
   }
 
@@ -190,8 +258,36 @@ export default class App {
     });
   }
 
+  // private static createMenu() {
+  //   const menuItem: MenuItem = {
+  //     checked: false,
+  //     commandId: 0,
+  //     enabled: true,
+  //     id: 'menu-item',
+  //     click: () => { console.log('') },
+  //     menu: null,
+  //     registerAccelerator: true,
+  //     sharingItem: null,
+  //     type: 'normal',
+
+  //     visible: true,
+  //     toolTip: null,
+  //     userAccelerator: null,
+  //     label: app.getName(),
+
+  //     role: 'about',
+  //     submenu: null,
+  //     sublabel: null,
+  //   };
+  //   const template = [
+  //     menuItem,
+  //   ];
+  //   const menu = Menu.buildFromTemplate(template);
+  //   Menu.setApplicationMenu(menu);
+  // }
+
   private static startBackgroundTask() {
-    const interval = (1000 * 60 * 10);
+    const interval = 1000 * 60 * 10;
 
     // Clear any existing interval
     if (App.backgroundTaskInterval) {
@@ -223,8 +319,7 @@ export default class App {
     if (!App.nextSubmissionTime || currentDate > nextSubmissionDate) {
       // Send a message to the render/UI process to execute code
       App.mainWindow.webContents.send('execute-background-task-code', message);
-    }
-    else {
+    } else {
       console.log('main process: background task skipped, next submission time not reached');
     }
   }
@@ -241,6 +336,11 @@ export default class App {
     App.application.on('window-all-closed', App.onWindowAllClosed); // Quit when all windows are closed.
     App.application.on('ready', App.onReady); // App is ready to load data
     App.application.on('activate', App.onActivate); // App is activated
+
+    // app.on('will-quit', () => {
+    //   clearInterval(App.backgroundTaskInterval);
+    //   App.backgroundTaskInterval = null;
+    // });
 
     // Listen for changes from the render/UI
 
@@ -262,6 +362,16 @@ export default class App {
 
     ipcMain.handle('get-encryption-key', () => {
       return App.encryptionKey;
+    });
+
+    ipcMain.on('set-wallet-type', (event, value) => {
+      App.walletType = value;
+      store.set('walletType', value);
+      console.log('main process: set-wallet-type:', value);
+    });
+
+    ipcMain.handle('get-wallet-type', () => {
+      return App.walletType;
     });
 
     ipcMain.on('set-upload-all-chats', (event, value) => {
@@ -292,8 +402,7 @@ export default class App {
       // Start or stop the background task based on the flag
       if (App.enableBackgroundTask) {
         App.startBackgroundTask();
-      }
-      else if (App.backgroundTaskInterval) {
+      } else if (App.backgroundTaskInterval) {
         clearInterval(App.backgroundTaskInterval);
         App.backgroundTaskInterval = null;
         console.log('main process: background task disabled');
@@ -360,9 +469,28 @@ export default class App {
       return App.uploadFrequency;
     });
 
-    // app.on('will-quit', () => {
-      // clearInterval(App.backgroundTaskInterval);
-      // App.backgroundTaskInterval = null;
-    // });
+    ipcMain.on('set-telegram-session', (event, value) => {
+      App.telegramSession = value;
+      store.set('telegramSession', value);
+      console.log('main process: set-telegram-session:', value);
+    });
+
+    ipcMain.handle('get-telegram-session', () => {
+      return App.telegramSession;
+    });
+
+    ipcMain.on('set-check-for-update', (event, value) => {
+      App.checkForUpdate = value;
+      store.set('checkForUpdate', value);
+      console.log('main process: set-check-for-update:', value);
+
+      if (App.checkForUpdate) {
+        UpdateEvents.checkForUpdates();
+      }
+    });
+
+    ipcMain.handle('get-check-for-update', () => {
+      return App.checkForUpdate;
+    });
   }
 }

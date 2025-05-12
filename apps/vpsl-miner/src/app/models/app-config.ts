@@ -1,3 +1,5 @@
+import { AppKitNetwork } from "@reown/appkit/networks";
+
 export interface IAppConfigItem {
   dFusion: IDFusion;
   telegram: ITelegram;
@@ -5,6 +7,7 @@ export interface IAppConfigItem {
   vana: IVana;
   cloudFlare: ICloudFlare;
   gelato: IGelato;
+  reownAppkit: IReownAppkit;
 }
 
 export interface IDFusion {
@@ -45,4 +48,11 @@ export interface ICloudFlare {
 
 export interface IGelato {
   apiKey: string;
+}
+
+export interface IReownAppkit {
+  projectId: string;
+  domain: string;
+  icon: string;
+  network: AppKitNetwork;
 }

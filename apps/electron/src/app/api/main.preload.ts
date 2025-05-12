@@ -10,6 +10,9 @@ contextBridge.exposeInMainWorld('electron', {
   setEncryptionKey: (value) => ipcRenderer.send('set-encryption-key', value),
   getEncryptionKey: () => ipcRenderer.invoke('get-encryption-key'),
 
+  setWalletType: (value) => ipcRenderer.send('set-wallet-type', value),
+  getWalletType: () => ipcRenderer.invoke('get-wallet-type'),
+
   setUploadAllChats: (value) => ipcRenderer.send('set-upload-all-chats', value),
   getUploadAllChats: () => ipcRenderer.invoke('get-upload-all-chats'),
 
@@ -34,10 +37,14 @@ contextBridge.exposeInMainWorld('electron', {
   onExecuteBackgroundTaskCode: (callback) => ipcRenderer.on('execute-background-task-code', callback),
 
   getBackgroundTaskIntervalExists: () => ipcRenderer.invoke('get-background-task-interval-exists'),
-  // onBackgroundTaskFailed: (callback) => ipcRenderer.on('background-task-failed', callback),
 
   setUploadFrequency: (value) => ipcRenderer.send('set-upload-frequency', value),
-  getUploadFrequency: () => ipcRenderer.invoke('get-upload-frequency')
+  getUploadFrequency: () => ipcRenderer.invoke('get-upload-frequency'),
 
-  // setBackgroundSubmissionTaskCompletedTime: (value) => ipcRenderer.send('set-background-submission-task-completed-time', value),
+  setTelegramSession: (value) => ipcRenderer.send('set-telegram-session', value),
+  getTelegramSession: () => ipcRenderer.invoke('get-telegram-session'),
+
+  setCheckForUpdate: (value) => ipcRenderer.send('set-check-for-update', value),
+  getCheckForUpdate: () => ipcRenderer.invoke('get-check-for-update'),
+  onSendUpdateMessage: (callback) => ipcRenderer.on('send-update-message', callback),
 });

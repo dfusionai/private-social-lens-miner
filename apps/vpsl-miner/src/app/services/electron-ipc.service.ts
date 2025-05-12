@@ -1,5 +1,5 @@
-import { inject, Injectable, signal, WritableSignal } from '@angular/core';
-import { Web3WalletService } from './web3-wallet.service';
+import { Injectable, signal } from '@angular/core';
+import { WalletType } from '../models/wallet';
 import { isElectron } from '../shared/helpers';
 
 declare const window: any;
@@ -8,10 +8,9 @@ declare const window: any;
   providedIn: 'root',
 })
 export class ElectronIpcService {
-  private readonly web3WalletService: Web3WalletService = inject(Web3WalletService);
-
-  public walletAddress: WritableSignal<string> = this.web3WalletService.walletAddress;
-  public encryptionKey: WritableSignal<string> = this.web3WalletService.encryptionKey;
+  public walletAddress = signal<string>('');
+  public encryptionKey = signal<string>('');
+  public walletType = signal<WalletType | null>(null);
 
   public isUploadAllChats = signal<boolean>(true);
   public selectedChatIdsList = signal<Array<number>>([]);
@@ -22,6 +21,9 @@ export class ElectronIpcService {
   public minimizeToTray = signal<boolean>(true);
   public backgroundTaskIntervalExists = signal<boolean>(false);
   public uploadFrequency = signal<number>(4);
+  public telegramSession = signal<string>('');
+  public appVersion = signal<string>('');
+  public checkForUpdate = signal<boolean>(false);
 
   constructor() {
     if (isElectron()) {
@@ -37,6 +39,10 @@ export class ElectronIpcService {
     const encryptionKey = await window.electron.getEncryptionKey();
     console.log('init encryptionKey', encryptionKey);
     this.encryptionKey.set(encryptionKey);
+
+    const walletType = await window.electron.getWalletType();
+    console.log('init walletType', walletType);
+    this.walletType.set(walletType);
 
     const isUploadAllChats = await window.electron.getUploadAllChats();
     console.log('init isUploadAllChats', isUploadAllChats);
@@ -74,7 +80,18 @@ export class ElectronIpcService {
     console.log('init uploadFrequency', uploadFrequency);
     this.uploadFrequency.set(uploadFrequency);
 
-    await this.web3WalletService.calculateBalance();
+    const telegramSession = await window.electron.getTelegramSession();
+    console.log('init telegramSession', telegramSession);
+    this.telegramSession.set(telegramSession);
+
+    const version = await window.electron.getAppVersion();
+    console.log('init appVersion', version);
+    this.appVersion.set(version);
+
+    const checkForUpdate = await window.electron.getCheckForUpdate();
+    console.log('init checkForUpdates', checkForUpdate);
+    this.checkForUpdate.set(checkForUpdate);
+
   }
 
   public setWalletAddress(value: string) {
@@ -85,6 +102,11 @@ export class ElectronIpcService {
   public setEncryptionKey(value: string) {
     this.encryptionKey.set(value);
     window.electron.setEncryptionKey(this.encryptionKey());
+  }
+
+  public setWalletType(value: WalletType | null) {
+    this.walletType.set(value);
+    window.electron.setWalletType(this.walletType());
   }
 
   public setUploadAllChats(value: boolean) {
@@ -119,7 +141,7 @@ export class ElectronIpcService {
     const lastSubmissionTime = this.lastSubmissionTime();
     if (lastSubmissionTime) {
       const nextDate = new Date();
-      nextDate.setTime(new Date(lastSubmissionTime).getTime() + (this.uploadFrequency() * 60 * 60 * 1000));
+      nextDate.setTime(new Date(lastSubmissionTime).getTime() + this.uploadFrequency() * 60 * 60 * 1000);
 
       this.nextSubmissionTime.set(nextDate);
       window.electron.setNextSubmissionTime(nextDate);
@@ -139,5 +161,24 @@ export class ElectronIpcService {
   public setUploadFrequency(value: number) {
     this.uploadFrequency.set(value);
     window.electron.setUploadFrequency(this.uploadFrequency());
+  }
+
+  public setTelegramSession(value: string) {
+    this.telegramSession.set(value);
+    window.electron.setTelegramSession(this.telegramSession());
+  }
+
+  public setCheckForUpdate(value: boolean) {
+    this.checkForUpdate.set(value);
+    window.electron.setCheckForUpdate(this.checkForUpdate());
+  }
+
+  public async getAppVersion(): Promise<string> {
+    if (isElectron()) {
+      const version = await window.electron.getAppVersion();
+      this.appVersion.set(version);
+      return version;
+    }
+    return '';
   }
 }

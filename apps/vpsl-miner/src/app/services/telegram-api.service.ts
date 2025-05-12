@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { Api, TelegramClient } from 'telegram';
 import { NewMessage, NewMessageEvent } from 'telegram/events';
 import { TotalList } from 'telegram/Helpers';
@@ -28,7 +28,6 @@ export class TelegramApiService {
   private readonly electronIpcService: ElectronIpcService = inject(ElectronIpcService);
   private readonly web3WalletService: Web3WalletService = inject(Web3WalletService);
 
-  private readonly LOCAL_STORAGE_SESSION_KEY = 'telegram-session';
   private currentPhoneCodeHash: string = '';
 
   public SESSION = new StringSession(''); // create a new StringSession, also you can use StoreSession
@@ -41,7 +40,7 @@ export class TelegramApiService {
     return this.appConfigService.telegram!.apiHash;
   }
 
-  public telegramClient: TelegramClient;
+  public telegramClient: TelegramClient = new TelegramClient(this.SESSION, this.apiId, this.apiHash, { connectionRetries: 5, useWSS: true });;
 
   public isAuthorized = false;
   public userId = signal<number>(-1);
@@ -52,24 +51,28 @@ export class TelegramApiService {
   public showTelegramError = signal<boolean>(false);
 
   constructor() {
-    // Get session from local storage
-    const storedSession = localStorage.getItem(this.LOCAL_STORAGE_SESSION_KEY);
-    this.SESSION = storedSession ? new StringSession(JSON.parse(storedSession)) : new StringSession('');
+    effect(() => {
+      // Get session from electron-store
+      const storedSession = this.electronIpcService.telegramSession();
+      console.log('telegram storedSession', storedSession);
+      this.SESSION = storedSession ? new StringSession(JSON.parse(storedSession)) : new StringSession('');
 
-    // Immediately create a client using your application data
-    this.telegramClient = new TelegramClient(this.SESSION, this.apiId, this.apiHash, { connectionRetries: 5, useWSS: true });
+      // Immediately create a client using your application data
+      this.telegramClient = new TelegramClient(this.SESSION, this.apiId, this.apiHash, { connectionRetries: 5, useWSS: true });
 
-    this.telegramClient.connect().then((storedSessionConnectResult: boolean) => {
-      if (storedSessionConnectResult) {
-        this.showTelegramError.set(false);
-        this.checkAuthorization();
-      }
-      else {
-        throw new Error('Failed to connect to Telegram client.');
-      }
-    }).catch((error) => {
-      this.showTelegramError.set(true);
-      console.error('TelegramClient connect error', error);
+      this.telegramClient.connect().then((storedSessionConnectResult: boolean) => {
+        console.log('telegram storedSessionConnectResult', storedSessionConnectResult);
+        if (storedSessionConnectResult) {
+          this.showTelegramError.set(false);
+          this.checkAuthorization();
+        }
+        else {
+          throw new Error('Failed to connect to Telegram client.');
+        }
+      }).catch((error) => {
+        this.showTelegramError.set(true);
+        console.error('TelegramClient connect error', error);
+      });
     });
 
     // Listen for messages from the main process
@@ -132,8 +135,8 @@ export class TelegramApiService {
         },
       });
 
-      // Save session to local storage
-      localStorage.setItem(this.LOCAL_STORAGE_SESSION_KEY, JSON.stringify(this.telegramClient.session.save()));
+      // Save session
+      this.electronIpcService.setTelegramSession(JSON.stringify(this.telegramClient.session.save()))
 
       await this.telegramClient.sendMessage('me', {
         message: `You're successfully logged in!`,
@@ -160,6 +163,7 @@ export class TelegramApiService {
 
   private checkAuthorization() {
     this.telegramClient.checkAuthorization().then(async (isAuthorized: boolean) => {
+      console.log('telegram isAuthorized', isAuthorized);
       if (isAuthorized) {
         this.telegramClient.addEventHandler(
           this.newMessageHandler.bind(this),
@@ -353,7 +357,7 @@ export class TelegramApiService {
   public async initialisePreSelectedDialogs() {
     await this.getDialogs();
 
-    if (this.electronIpcService.selectedChatIdsList().length > 0) {
+    if (this.electronIpcService.selectedChatIdsList()?.length > 0) {
       const preSelectedDialogs: Array<Dialog> = [];
       this.telegramDialogs().forEach(
         telDialog => {
