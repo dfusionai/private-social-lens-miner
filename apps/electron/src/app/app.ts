@@ -39,7 +39,7 @@ export default class App {
   // Create server local
   static localServer: http.Server;
 
-  private static createLocalServer(): Promise<number> {
+  private static createLocalServer() {
     return new Promise<number>((resolve) => {
       const pathToServe = join(__dirname, 'renderer');
 
@@ -258,33 +258,33 @@ export default class App {
     });
   }
 
-  private static createMenu() {
-    const menuItem: MenuItem = {
-      checked: false,
-      commandId: 0,
-      enabled: true,
-      id: 'menu-item',
-      click: () => { console.log('') },
-      menu: null,
-      registerAccelerator: true,
-      sharingItem: null,
-      type: 'normal',
+  // private static createMenu() {
+  //   const menuItem: MenuItem = {
+  //     checked: false,
+  //     commandId: 0,
+  //     enabled: true,
+  //     id: 'menu-item',
+  //     click: () => { console.log('') },
+  //     menu: null,
+  //     registerAccelerator: true,
+  //     sharingItem: null,
+  //     type: 'normal',
 
-      visible: true,
-      toolTip: null,
-      userAccelerator: null,
-      label: app.getName(),
+  //     visible: true,
+  //     toolTip: null,
+  //     userAccelerator: null,
+  //     label: app.getName(),
 
-      role: 'about',
-      submenu: null,
-      sublabel: null,
-    };
-    const template = [
-      menuItem,
-    ];
-    const menu = Menu.buildFromTemplate(template);
-    Menu.setApplicationMenu(menu);
-  }
+  //     role: 'about',
+  //     submenu: null,
+  //     sublabel: null,
+  //   };
+  //   const template = [
+  //     menuItem,
+  //   ];
+  //   const menu = Menu.buildFromTemplate(template);
+  //   Menu.setApplicationMenu(menu);
+  // }
 
   private static startBackgroundTask() {
     const interval = 1000 * 60 * 10;
