@@ -27,6 +27,13 @@
       @else {
         <div class="flex flex-col justify-center items-center gap-y-4">
           <p class="w-full">Unsupported network detected. To continue, please switch to Vana and allow a moment for the update.</p>
+
+          <div class="w-full flex flex-row justify-end items-center">
+            <span class="text-[#848689] cursor-pointer underline" (click)="restartConnection()">
+              Back
+            </span>
+          </div>
+
           <!-- <appkit-network-button></appkit-network-button> -->
           <appkit-button></appkit-button>
         </div>

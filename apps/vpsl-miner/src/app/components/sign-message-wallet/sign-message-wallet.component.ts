@@ -38,6 +38,7 @@ export class SignMessageWalletComponent {
       }
     });
   }
+
   public async signMessage() {
     try {
       if (this.validNetwork) {
@@ -61,5 +62,22 @@ export class SignMessageWalletComponent {
       this.showHint = false;
       console.error('Error signing message:', error);
     }
+  }
+
+  public async restartConnection() {
+    try {
+      if (this.existingWalletService.isConnected()) {
+        await this.existingWalletService.disconnectWallet();
+      }
+
+      this.electronIpcService.setWalletAddress('');
+      this.electronIpcService.setEncryptionKey('');
+      this.electronIpcService.setWalletType(null);
+      this.router.navigate(['']);
+    }
+    catch (error) {
+      console.error('Failed to restart connection');
+    }
+
   }
 }
