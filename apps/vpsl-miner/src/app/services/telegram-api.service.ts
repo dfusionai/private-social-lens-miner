@@ -9,11 +9,15 @@ import { isElectron } from '../shared/helpers';
 import { AppConfigService } from './app-config.service';
 import { CryptographyService } from './cryptography.service';
 import { ElectronIpcService } from './electron-ipc.service';
-import { GelatoApiService } from './gelato-api.service';
+// import { GelatoApiService } from './gelato-api.service';
 import { PinataApiService } from './pinata-api.service';
 import { SubmissionProcessingService } from './submission-processing.service';
 import { Web3WalletService } from './web3-wallet.service';
 import { RelayApiService } from './relay-api.service';
+import { ReferralService } from './referral.service';
+import { DataSource, ISubmissionUserDto } from '../models/submission-user';
+import { SubmissionUserApiService } from './submission-user-api.service';
+import { SubmissionUserService } from './submission-user.service';
 
 declare const window: any;
 
@@ -25,10 +29,13 @@ export class TelegramApiService {
   private readonly submissionProcessingService: SubmissionProcessingService = inject(SubmissionProcessingService);
   private readonly cryptographyService: CryptographyService = inject(CryptographyService);
   private readonly pinataApiService: PinataApiService = inject(PinataApiService);
-  private readonly gelatoApiService: GelatoApiService = inject(GelatoApiService);
+  // private readonly gelatoApiService: GelatoApiService = inject(GelatoApiService);
   private readonly electronIpcService: ElectronIpcService = inject(ElectronIpcService);
   private readonly web3WalletService: Web3WalletService = inject(Web3WalletService);
   private readonly relayApiService: RelayApiService = inject(RelayApiService);
+  private readonly referralService: ReferralService = inject(ReferralService);
+  private readonly submissionUserApiService: SubmissionUserApiService = inject(SubmissionUserApiService);
+  private readonly submissionUserService: SubmissionUserService = inject(SubmissionUserService);
 
   private currentPhoneCodeHash: string = '';
 
@@ -194,6 +201,9 @@ export class TelegramApiService {
         // });
         const currentUser = await this.getUser('me');
         this.userId.set(Number(currentUser?.fullUser.id));
+
+        this.registerSubmissionUser();
+
         await this.initialisePreSelectedDialogs();
       }
 
@@ -414,6 +424,7 @@ export class TelegramApiService {
     this.submissionProcessingService.startProcessingState();
     if (this.selectedDialogsList().length > 0) {
       await this.initiateSubmission();
+      // await this.doTelegramSubmission('');
     }
     else {
       this.submissionProcessingService.displayError('No chats selected for submission.')
@@ -427,7 +438,7 @@ export class TelegramApiService {
     // this.cloudFlareService.openCloudFlareDialog();
 
     const token = this.userId().toString();
-    this.sendBotMessage(`/social_truth_verify|${token}|TelegramMiner`).then(
+    this.sendBotMessage(`/social_truth_verify|${token}|TelegramMiner|${this.web3WalletService.walletAddress()}|${this.referralService.referralRewardCode()}`).then(
       (sendBotMsgRes) => {
         console.log('sendBotMsgRes', sendBotMsgRes);
         this.submissionProcessingService.displayInfo('You are being verified');
@@ -517,5 +528,20 @@ export class TelegramApiService {
     };
     console.log('fileDto', fileDto);
     return fileDto;
+  }
+
+  public registerSubmissionUser() {
+    const submissionUserDto: ISubmissionUserDto = {
+      dataSource: DataSource.telegram,
+      sourceId: this.userId()?.toString() || '',
+      walletAddress: this.web3WalletService.walletAddress(),
+      referralCode: '',
+    };
+
+    this.submissionUserApiService.registerSubmissionUser(submissionUserDto).subscribe(
+      (result: ISubmissionUserDto) => {
+        this.submissionUserService.submissionUser.set(result);
+      }
+    );
   }
 }

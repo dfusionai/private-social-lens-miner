@@ -1,13 +1,17 @@
+import { Clipboard } from '@angular/cdk/clipboard';
 import { AfterViewInit, Component, computed, inject, signal, WritableSignal } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Api } from 'telegram';
 import { TotalList } from 'telegram/Helpers';
 import { Dialog } from 'telegram/tl/custom/dialog';
 import { ElectronIpcService } from '../../services/electron-ipc.service';
 import { TelegramApiService } from '../../services/telegram-api.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { ReferralRewardsDialogComponent } from '../referral-rewards-dialog/referral-rewards-dialog.component';
+import { SubmissionUserService } from '../../services/submission-user.service';
+import { ReferralService } from '../../services/referral.service';
 
 @Component({
   selector: 'app-telegram-main',
@@ -21,6 +25,9 @@ export class TelegramMainComponent implements AfterViewInit {
   private readonly electronIpcService: ElectronIpcService = inject(ElectronIpcService);
   private readonly snackBar: MatSnackBar = inject(MatSnackBar);
   private readonly matDialog: MatDialog = inject(MatDialog);
+  private readonly clipboard: Clipboard = inject(Clipboard);
+  private readonly submissionUserService: SubmissionUserService = inject(SubmissionUserService);
+  private readonly referralService: ReferralService = inject(ReferralService);
 
   public isBackgroundTaskEnabled: WritableSignal<boolean>;
   public lastSubmissionTime: WritableSignal<Date | null>;
@@ -57,6 +64,16 @@ export class TelegramMainComponent implements AfterViewInit {
       return '';
     }
   });
+
+  public get referralCode() {
+    return this.submissionUserService.submissionUser()?.referralCode || 'Not available';
+  }
+
+  public referralRewardCode = '';
+
+  public get appliedReferralRewardCode() {
+    return this.referralService.referralRewardCode() || '';
+  }
 
   constructor() {
     this.isBackgroundTaskEnabled = this.electronIpcService.isBackgroundTaskEnabled;
@@ -136,5 +153,40 @@ export class TelegramMainComponent implements AfterViewInit {
         this.electronIpcService.stopBackgroundTask();
       }
     });
+  }
+
+  public openReferralRewardsDialog() {
+    const matDialogConfig: MatDialogConfig = {
+      disableClose: false,
+      height: '550px',
+      width: '800px'
+    }
+    this.matDialog.open(
+      ReferralRewardsDialogComponent,
+      matDialogConfig
+    );
+  }
+
+  public copyReferralCode() {
+    if (!this.submissionUserService.submissionUser()?.referralCode) {
+      return;
+    }
+
+    this.clipboard.copy(this.submissionUserService.submissionUser()?.referralCode || '');
+
+    this.snackBar.open(
+      `Copied`,
+      ``,
+      { duration: 1000 * 2 }
+    );
+  }
+
+  public applyReferralCode() {
+    this.referralService.referralRewardCode.set(this.referralRewardCode);
+    this.snackBar.open(
+      `Referral code applied`,
+      ``,
+      { duration: 1000 * 2 }
+    );
   }
 }
