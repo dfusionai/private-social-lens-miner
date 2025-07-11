@@ -21,7 +21,6 @@ import { ReferralService } from '../../services/referral.service';
 })
 export class TelegramMainComponent implements AfterViewInit {
   private readonly telegramApiService: TelegramApiService = inject(TelegramApiService);
-  // private readonly cloudFlareService: CloudFlareService = inject(CloudFlareService);
   private readonly electronIpcService: ElectronIpcService = inject(ElectronIpcService);
   private readonly snackBar: MatSnackBar = inject(MatSnackBar);
   private readonly matDialog: MatDialog = inject(MatDialog);
