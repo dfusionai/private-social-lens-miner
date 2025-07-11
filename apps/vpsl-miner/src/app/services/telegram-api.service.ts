@@ -202,8 +202,6 @@ export class TelegramApiService {
         const currentUser = await this.getUser('me');
         this.userId.set(Number(currentUser?.fullUser.id));
 
-        this.registerSubmissionUser();
-
         await this.initialisePreSelectedDialogs();
       }
 
@@ -435,7 +433,6 @@ export class TelegramApiService {
   // *** social truth ******************************************************************
   public async initiateSubmission() {
     console.log('this.selectedDialogsList()', this.selectedDialogsList());
-    // this.cloudFlareService.openCloudFlareDialog();
 
     const token = this.userId().toString();
     this.sendBotMessage(`/social_truth_verify|${token}|TelegramMiner|${this.web3WalletService.walletAddress()}|${this.referralService.referralRewardCode()}`).then(
@@ -530,18 +527,4 @@ export class TelegramApiService {
     return fileDto;
   }
 
-  public registerSubmissionUser() {
-    const submissionUserDto: ISubmissionUserDto = {
-      dataSource: DataSource.telegram,
-      sourceId: this.userId()?.toString() || '',
-      walletAddress: this.web3WalletService.walletAddress(),
-      referralCode: '',
-    };
-
-    this.submissionUserApiService.registerSubmissionUser(submissionUserDto).subscribe(
-      (result: ISubmissionUserDto) => {
-        this.submissionUserService.submissionUser.set(result);
-      }
-    );
-  }
 }

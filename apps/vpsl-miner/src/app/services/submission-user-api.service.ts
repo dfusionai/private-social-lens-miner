@@ -16,13 +16,6 @@ export class SubmissionUserApiService {
 
   constructor(private http: HttpClient) {}
 
-  public registerSubmissionUser(submissionUserDto: ISubmissionUserDto): Observable<ISubmissionUserDto> {
-    const url = `${this.apiUrl}/register-submission-user`;
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-
-    return this.http.post<ISubmissionUserDto>(url, submissionUserDto, { headers });
-  }
-
   public getSubmissionUserById(sourceId: string): Observable<ISubmissionUserDto> {
     const url = this.apiUrl as string;
     const params = new HttpParams().set('dataSource', DataSource.telegram).set('sourceId', sourceId);

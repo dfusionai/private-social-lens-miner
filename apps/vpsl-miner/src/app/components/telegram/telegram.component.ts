@@ -57,7 +57,7 @@ export class TelegramComponent {
     const loginSuccess: boolean = await this.telegramApiService.clientStartHandler(this.phoneNumber, this.authCode);
     if (loginSuccess) {
       console.log('Login success');
-      this.telegramApiService.registerSubmissionUser();
+
       this.showCodeError = false;
     } else {
       this.showCodeError = true;
