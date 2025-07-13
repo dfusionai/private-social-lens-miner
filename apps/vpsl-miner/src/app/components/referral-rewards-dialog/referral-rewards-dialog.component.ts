@@ -1,8 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Clipboard } from '@angular/cdk/clipboard';
-import { SubmissionUserService } from '../../services/submission-user.service';
-
+import { ReferralService } from '../../services/referral.service';
 
 @Component({
   selector: 'app-referral-rewards-dialog',
@@ -13,18 +12,18 @@ import { SubmissionUserService } from '../../services/submission-user.service';
 export class ReferralRewardsDialogComponent {
   private readonly snackBar: MatSnackBar = inject(MatSnackBar);
   private readonly clipboard: Clipboard = inject(Clipboard);
-  private readonly submissionUserService: SubmissionUserService = inject(SubmissionUserService);
+  private readonly referralService: ReferralService = inject(ReferralService);
 
   public get referralCode() {
-    return this.submissionUserService.submissionUser()?.referralCode || 'Not available';
+    return this.referralService.userReferralCode();
   }
 
   public copyReferralCode() {
-    if (!this.submissionUserService.submissionUser()?.referralCode) {
+    if (!this.referralCode) {
       return;
     }
 
-    this.clipboard.copy(this.submissionUserService.submissionUser()?.referralCode || '');
+    this.clipboard.copy(this.referralCode);
 
     this.snackBar.open(
       `Copied`,

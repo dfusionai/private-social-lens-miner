@@ -7,12 +7,14 @@
 
     <div class="flex flex-row justify-start items-center gap-x-4 cursor-pointer" (click)="copyReferralCode()">
       <span class="pl-8">
-        Your Referral Code: <strong class="hover:text-[#1A56CB]">{{referralCode}}</strong>
+        Your Referral Code: <strong class="hover:text-[#1A56CB]">{{referralCode || "Not Available"}}</strong>
       </span>
 
-      <button mat-icon-button>
-        <mat-icon>content_copy</mat-icon>
-      </button>
+      @if(referralCode) {
+        <button mat-icon-button>
+          <mat-icon>content_copy</mat-icon>
+        </button>
+      }
     </div>
   </div>
 

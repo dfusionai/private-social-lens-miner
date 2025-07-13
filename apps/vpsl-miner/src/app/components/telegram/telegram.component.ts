@@ -58,6 +58,8 @@ export class TelegramComponent {
     if (loginSuccess) {
       console.log('Login success');
 
+      this.telegramApiService.sendValidateSubmissionUserMessage();
+
       this.showCodeError = false;
     } else {
       this.showCodeError = true;
