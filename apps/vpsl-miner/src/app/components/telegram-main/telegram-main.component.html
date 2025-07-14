@@ -24,7 +24,7 @@
       <!-- <label for="referral-code-input" class="block font-medium">Apply Referral Code</label> -->
       <input type="text" id="referral-code-input"
         class="block w-full text-lg h-10 p-2.5 rounded-lg bg-gray-700 border-gray-700 placeholder-gray-400  focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Apply Referral Code"
+        placeholder="Referral Code"
         [(ngModel)]="referralRewardCode">
       <button class="referral-btn" (click)="applyReferralCode()">
         Apply
@@ -33,6 +33,9 @@
 
     @if(appliedReferralRewardCode) {
       <span>Referral Code Applied: {{appliedReferralRewardCode}}</span>
+    }
+    @else {
+      <span>No Code Applied</span>
     }
 
   </div>
