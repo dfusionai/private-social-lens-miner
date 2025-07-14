@@ -13,6 +13,7 @@ import { PinataApiService } from './pinata-api.service';
 import { ReferralService } from './referral.service';
 import { RelayApiService } from './relay-api.service';
 import { SubmissionProcessingService } from './submission-processing.service';
+import { SubmissionUserService } from './submission-user.service';
 import { Web3WalletService } from './web3-wallet.service';
 
 declare const window: any;
@@ -29,7 +30,7 @@ export class TelegramApiService {
   private readonly web3WalletService: Web3WalletService = inject(Web3WalletService);
   private readonly relayApiService: RelayApiService = inject(RelayApiService);
   private readonly referralService: ReferralService = inject(ReferralService);
-  // private readonly submissionUserService: SubmissionUserService = inject(SubmissionUserService);
+  private readonly submissionUserService: SubmissionUserService = inject(SubmissionUserService);
 
   private currentPhoneCodeHash: string = '';
 
@@ -492,8 +493,10 @@ export class TelegramApiService {
         await this.relayApiService.relayAddFileWithPermissions(encryptedEncryptionKey, uploadedEncryptedFileUrl);
 
         // http requests to dfusion-validator-backend = CORS errors
-        // this.submissionUserService.getSubmissionUser(this.userId().toString());
-        this.sendValidateSubmissionUserMessage();
+        this.submissionUserService.getSubmissionUser(
+          this.userId().toString()
+        );
+
       }
       else {
         console.error('no upload file url');
