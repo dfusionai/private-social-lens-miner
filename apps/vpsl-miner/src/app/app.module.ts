@@ -23,6 +23,7 @@ import { HotWalletComponent } from './components/hot-wallet/hot-wallet.component
 import { MinerAppContainerComponent } from './components/miner-app-container/miner-app-container.component';
 import { MinerMainComponent } from './components/miner-main/miner-main.component';
 import { MinerSettingsComponent } from './components/miner-settings/miner-settings.component';
+import { ReferralLeaderboardComponent } from './components/referral-leaderboard/referral-leaderboard.component';
 import { ReferralRewardsDialogComponent } from './components/referral-rewards-dialog/referral-rewards-dialog.component';
 import { SignMessageWalletComponent } from './components/sign-message-wallet/sign-message-wallet.component';
 import { StakingRewardsInfoComponent } from './components/staking-rewards-info/staking-rewards-info.component';
@@ -38,9 +39,7 @@ import { PhoneInputDirective } from './directives/phone-input.directive';
 import { AppConfigService } from './services/app-config.service';
 
 @NgModule({
-  schemas: [
-    CUSTOM_ELEMENTS_SCHEMA,
-  ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   declarations: [
     AppComponent,
     HotWalletComponent,
@@ -63,6 +62,7 @@ import { AppConfigService } from './services/app-config.service';
     SignMessageWalletComponent,
     WalletConnectionComponent,
     ReferralRewardsDialogComponent,
+    ReferralLeaderboardComponent,
   ],
   imports: [
     BrowserModule,

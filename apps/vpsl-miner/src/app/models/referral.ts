@@ -1,6 +1,6 @@
-export interface IReferralLeaderboardDto
-{
-    walletAddress: string;
-    referralCount: number;
-    referralAmount: number;
+export interface IReferralLeaderboardDto {
+  rank?: number;
+  walletAddress: string;
+  referralCount: number;
+  referralAmount: number;
 }
