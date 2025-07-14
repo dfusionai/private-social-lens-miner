@@ -18,12 +18,30 @@ export class ReferralRewardsDialogComponent {
     return this.referralService.userReferralCode();
   }
 
+  public get referralLink() {
+    return `https://vana.genesis.dfusion.ai?r=${this.referralCode}`
+  }
+
   public copyReferralCode() {
     if (!this.referralCode) {
       return;
     }
 
     this.clipboard.copy(this.referralCode);
+
+    this.snackBar.open(
+      `Copied`,
+      ``,
+      { duration: 1000 * 2 }
+    );
+  }
+
+  public copyReferralLink() {
+    if (!this.referralCode) {
+      return;
+    }
+
+    this.clipboard.copy(this.referralLink);
 
     this.snackBar.open(
       `Copied`,

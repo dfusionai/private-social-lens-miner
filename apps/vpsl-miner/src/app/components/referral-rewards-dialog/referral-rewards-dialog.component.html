@@ -15,13 +15,25 @@
       <p>Share your unique referral code with friends.</p>
       <p>
         When your friend submits your code and <span class="text-[#1A56CB]">completes their first contribution</span>,
-        both your referred friend and you will receive <span class="text-[#FB9C2D]">25 $VFSN!</span>
+        both your referred friend and you will receive <span class="text-[#FB9C2D]">10 $VFSN!</span>
       </p>
     </div>
 
     <div class="flex flex-row justify-start items-center gap-x-4 cursor-pointer" (click)="copyReferralCode()">
       <span>
         Your Referral Code: <strong class="hover:text-[#1A56CB]">{{referralCode || "Not Available"}}</strong>
+      </span>
+
+      @if(referralCode) {
+        <button mat-icon-button>
+          <mat-icon>content_copy</mat-icon>
+        </button>
+      }
+    </div>
+
+    <div class="flex flex-row justify-start items-center gap-x-4 cursor-pointer" (click)="copyReferralLink()">
+      <span>
+        Your Referral Link: <strong class="hover:text-[#1A56CB]">{{referralLink || "Not Available"}}</strong>
       </span>
 
       @if(referralCode) {
