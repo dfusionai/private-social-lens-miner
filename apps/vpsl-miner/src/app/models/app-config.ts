@@ -25,7 +25,7 @@ export interface ISuiPoc {
   threshold: number;
   keyServers: string[];
   suiScanUrl: string;
-  network?: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
+  network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
 }
 export interface IDFusion {
   validatorBackendUrl: string;

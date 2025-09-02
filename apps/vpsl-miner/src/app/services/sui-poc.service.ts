@@ -40,7 +40,8 @@ export class SuiPocService {
     this.pocConfig = this.appConfigService.suiPoc;
     this.walrusConfig = this.appConfigService.walrus;
     // set up SUI client
-    this.suiClient = new SuiClient({ url: getFullnodeUrl('testnet') });
+    const network = this.pocConfig?.network || 'testnet';
+    this.suiClient = new SuiClient({ url: getFullnodeUrl(network) });
     // NOTE: DO NOT USE LATEST SEAL SDK
     // [https://seal-key-server-testnet-1.mystenlabs.com, https://seal-key-server-testnet-2.mystenlabs.com]
     // this.keyServers.set(["0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75", "0xf5d14a81a982144ae441cd7d64b09027f116a468bd36e7eca494f750591623c8"]);
