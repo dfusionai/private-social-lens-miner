@@ -23,6 +23,7 @@ export interface ISuiPoc {
   packageId: string;
   nautilusUrl: string;
   threshold: number;
+  keyServers: string[];
   suiScanUrl: string;
   network?: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
 }
