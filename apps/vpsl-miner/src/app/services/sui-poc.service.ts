@@ -42,13 +42,13 @@ export class SuiPocService {
     // set up SUI client
     const network = this.pocConfig?.network || 'testnet';
     this.suiClient = new SuiClient({ url: getFullnodeUrl(network) });
-    // NOTE: DO NOT USE LATEST SEAL SDK
+    // LATEST SEAL SDK does not work with key server object ids
     // [https://seal-key-server-testnet-1.mystenlabs.com, https://seal-key-server-testnet-2.mystenlabs.com]
     // this.keyServers.set(["0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75", "0xf5d14a81a982144ae441cd7d64b09027f116a468bd36e7eca494f750591623c8"]);
     // this.keyServers.set(["0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75"]);
     
     // [https://seal-testnet.api.rubynodes.io/]
-    this.keyServers.set(this.pocConfig?.keyServers ?? ['0x6068c0acb197dddbacd4746a9de7f025b2ed5a5b6c1b1ab44dade4426d141da2']);
+    this.keyServers.set(this.pocConfig?.keyServers ?? ['0xda2f2fe7b82a6b734aedfe2d278f83a1db21d21a907dd8e6e19ce5e906b42afe']);
     
     this.sealClient = new SealClient({
       suiClient: this.suiClient, 
