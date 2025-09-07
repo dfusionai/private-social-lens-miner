@@ -56,7 +56,6 @@ export class TelegramApiService {
   public showTelegramError = signal<boolean>(false);
 
   constructor() {
-    this.aiAgentInfo = this.appConfigService.aiAgent;
     effect(() => {
       // Get session from electron-store
       const storedSession = this.electronIpcService.telegramSession();
