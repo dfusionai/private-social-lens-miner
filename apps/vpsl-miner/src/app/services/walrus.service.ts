@@ -99,8 +99,13 @@ export class WalrusService {
       const headers = new HttpHeaders({
         'x-api-key': this.appConfigService.relayApi!.apiKey || '',
       });
+      // const headers = new HttpHeaders({
+      //   'x-api-key': this.appConfigService.relayApi!.apiKey || '',
+      //   'Content-Type': 'application/octet-stream',
+      // });
 
       const response = await firstValueFrom(this.httpClient.post<Array<WalrusUploadRelayResponse>>(uploadUrl, formData, { headers }));
+      // const response = await firstValueFrom(this.httpClient.post<Array<WalrusUploadRelayResponse>>(uploadUrl, encryptedData, { headers }));
       console.log('Walrus upload via relay response', response);
 
       if (!response || response.length === 0) {
@@ -109,7 +114,7 @@ export class WalrusService {
 
       // Return the URL to access the blob
       const aggregatorUrl = this.appConfigService.walrus!.aggregatorUrl;
-      return `${aggregatorUrl}/blobs/${response[0].blobId}`;
+      return `${aggregatorUrl}/blobs/by-quilt-patch-id/${response[0].id}`;
     } catch (error) {
       console.error('Walrus upload via relay failed', error);
       throw new Error('Failed to upload encrypted data to Walrus storage via relay. Please try again.');
