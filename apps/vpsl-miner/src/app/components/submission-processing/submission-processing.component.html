@@ -8,13 +8,13 @@
 
 <!-- <mat-dialog-content> -->
 <div class="h-full w-full flex flex-col justify-start items-stretch px-4 pb-4 overflow-hidden">
-  @if(showError() || showFailure() || isProcessFailed()) {
+  <!-- @if(showError() || showFailure() || isProcessFailed()) { -->
   <div class="flex flex-row justify-end items-center pt-4">
     <button mat-icon-button (click)="endSubmissionFlow()">
       <mat-icon>close</mat-icon>
     </button>
   </div>
-  }
+  <!-- } -->
 
   <div class="flex flex-1">
     <!-- @if (showCloudFlare()) {
