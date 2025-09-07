@@ -65,7 +65,11 @@ export class WalrusService {
   private readonly appConfigService: AppConfigService = inject(AppConfigService);
   private readonly httpClient: HttpClient = inject(HttpClient);
 
-  constructor() {}
+  private epochs = 53;
+  
+  constructor() {
+    this.epochs = this.appConfigService?.walrus?.epochs || 53;
+  }
 
   /**
  * Upload a file to Walrus storage
@@ -87,20 +91,24 @@ export class WalrusService {
   
   public async uploadFileToWalrusViaRelay(encryptedData: File): Promise<string> {
     try {
-      const epochs = this.appConfigService.walrus!.epochs || 5;
       const relayUrl = this.appConfigService.relayApi!.baseUrl;
 
       const uploadUrl = `${relayUrl}/api/relay/walrus/upload`;
 
       const formData = new FormData();
       formData.append('file', encryptedData);
-      formData.append('epochs', epochs.toString());
+      formData.append('epochs', this.epochs.toString());
       
       const headers = new HttpHeaders({
         'x-api-key': this.appConfigService.relayApi!.apiKey || '',
       });
+      // const headers = new HttpHeaders({
+      //   'x-api-key': this.appConfigService.relayApi!.apiKey || '',
+      //   'Content-Type': 'application/octet-stream',
+      // });
 
       const response = await firstValueFrom(this.httpClient.post<Array<WalrusUploadRelayResponse>>(uploadUrl, formData, { headers }));
+      // const response = await firstValueFrom(this.httpClient.post<Array<WalrusUploadRelayResponse>>(uploadUrl, encryptedData, { headers }));
       console.log('Walrus upload via relay response', response);
 
       if (!response || response.length === 0) {
@@ -109,7 +117,7 @@ export class WalrusService {
 
       // Return the URL to access the blob
       const aggregatorUrl = this.appConfigService.walrus!.aggregatorUrl;
-      return `${aggregatorUrl}/blobs/${response[0].blobId}`;
+      return `${aggregatorUrl}/blobs/by-quilt-patch-id/${response[0].id}`;
     } catch (error) {
       console.error('Walrus upload via relay failed', error);
       throw new Error('Failed to upload encrypted data to Walrus storage via relay. Please try again.');
@@ -123,10 +131,9 @@ export class WalrusService {
       }
 
       const publisherUrl = this.appConfigService.walrus.publisherUrl;
-      const epochs = this.appConfigService.walrus.epochs || 5;
 
       // Prepare the upload URL with epochs parameter
-      const uploadUrl = `${publisherUrl}/blobs?epochs=${epochs}`;
+      const uploadUrl = `${publisherUrl}/blobs?epochs=${this.epochs}`;
 
       // Prepare headers
       const headers = new HttpHeaders({

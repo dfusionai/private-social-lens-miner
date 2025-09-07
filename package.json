@@ -1,6 +1,6 @@
 {
   "name": "electron",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "license": "MIT",
   "homepage": "https://www.dfusion.ai",
   "author": {
@@ -95,8 +95,8 @@
     "@angular/platform-browser-dynamic": "~19.1.0",
     "@angular/router": "~19.1.0",
     "@gelatonetwork/relay-sdk": "^5.6.0",
-    "@mysten/seal": "0.4.23",
-    "@mysten/sui": "^1.30.1",
+    "@mysten/seal": "^0.5.2",
+    "@mysten/sui": "^1.37.6",
     "@reown/appkit": "^1.7.2",
     "@reown/appkit-adapter-wagmi": "^1.7.2",
     "@toruslabs/eccrypto": "^6.0.2",

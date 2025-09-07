@@ -10,8 +10,7 @@ import { ElectronIpcService } from '../../services/electron-ipc.service';
 import { ReferralService } from '../../services/referral.service';
 import { TelegramApiService } from '../../services/telegram-api.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
-import { SubmissionProcessingService } from '../../services/submission-processing.service';
-import { SuiPocService } from '../../services/sui-poc.service';
+import { SuiBlockchainService } from '../../services/sui-poc.service';
 import { ReferralRewardsDialogComponent } from '../referral-rewards-dialog/referral-rewards-dialog.component';
 
 @Component({
@@ -23,13 +22,13 @@ import { ReferralRewardsDialogComponent } from '../referral-rewards-dialog/refer
 export class TelegramMainComponent implements AfterViewInit {
   private readonly telegramApiService: TelegramApiService = inject(TelegramApiService);
   private readonly electronIpcService: ElectronIpcService = inject(ElectronIpcService);
-  private readonly submissionProcessingService: SubmissionProcessingService = inject(SubmissionProcessingService);
   private readonly snackBar: MatSnackBar = inject(MatSnackBar);
   private readonly matDialog: MatDialog = inject(MatDialog);
-  private readonly suiPocService: SuiPocService = inject(SuiPocService);
-  public suiAddress = this.suiPocService.suiPublicKey;
+  private readonly suiBlockchainService: SuiBlockchainService = inject(SuiBlockchainService);
   private readonly clipboard: Clipboard = inject(Clipboard);
   private readonly referralService: ReferralService = inject(ReferralService);
+  
+  public suiAddress = this.suiBlockchainService.suiPublicKey;
 
   public isBackgroundTaskEnabled: WritableSignal<boolean>;
   public lastSubmissionTime: WritableSignal<Date | null>;

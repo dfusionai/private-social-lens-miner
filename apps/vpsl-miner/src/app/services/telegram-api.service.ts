@@ -1,24 +1,20 @@
-import { inject, Injectable, signal, effect } from '@angular/core';
-import { TelegramClient } from 'telegram';
-import { StringSession } from 'telegram/sessions';
-import { TotalList } from 'telegram/Helpers';
-import { Dialog } from 'telegram/tl/custom/dialog';
-import { Api } from 'telegram';
-import { AppConfigService } from './app-config.service';
-import { ElectronIpcService } from './electron-ipc.service';
-import { SubmissionProcessingService } from './submission-processing.service';
-import { Web3WalletService } from './web3-wallet.service';
-import { RelayApiService } from './relay-api.service';
-import { CryptographyService } from './cryptography.service';
-import { HttpService } from './http.service';
-import { firstValueFrom } from 'rxjs';
+import { effect, inject, Injectable, signal } from '@angular/core';
+import { Api, TelegramClient } from 'telegram';
 import { NewMessage, NewMessageEvent } from 'telegram/events';
+import { TotalList } from 'telegram/Helpers';
+import { StringSession } from 'telegram/sessions';
+import { Dialog } from 'telegram/tl/custom/dialog';
 import { chatDto, fileDto } from '../models/social-truth';
 import { isElectron } from '../shared/helpers';
-import { IAiAgent } from '../models/app-config';
-import { ITelegramLoginResponse } from '../models/ai-chat';
-import { ReferralService } from './referral.service';
+import { AppConfigService } from './app-config.service';
+import { CryptographyService } from './cryptography.service';
+import { ElectronIpcService } from './electron-ipc.service';
 import { PinataApiService } from './pinata-api.service';
+import { ReferralService } from './referral.service';
+import { RelayApiService } from './relay-api.service';
+import { SubmissionProcessingService } from './submission-processing.service';
+import { SuiBlockchainService } from './sui-poc.service';
+import { Web3WalletService } from './web3-wallet.service';
 
 declare const window: any;
 
@@ -34,9 +30,8 @@ export class TelegramApiService {
   private readonly electronIpcService: ElectronIpcService = inject(ElectronIpcService);
   private readonly web3WalletService: Web3WalletService = inject(Web3WalletService);
   private readonly relayApiService: RelayApiService = inject(RelayApiService);
-  private readonly aiAgentInfo: IAiAgent | null = null;
-  private readonly httpService: HttpService = inject(HttpService);
   private readonly referralService: ReferralService = inject(ReferralService);
+  private readonly suiBlockchainService: SuiBlockchainService = inject(SuiBlockchainService);
 
   private currentPhoneCodeHash: string = '';
 
@@ -61,7 +56,6 @@ export class TelegramApiService {
   public showTelegramError = signal<boolean>(false);
 
   constructor() {
-    this.aiAgentInfo = this.appConfigService.aiAgent;
     effect(() => {
       // Get session from electron-store
       const storedSession = this.electronIpcService.telegramSession();
@@ -481,6 +475,7 @@ export class TelegramApiService {
 
     if (this.selectedDialogsList().length > 0) {
       await this.initiateSubmission();
+      // this.doTelegramSubmission('token');
     } else {
       this.submissionProcessingService.setVanaProcessErr('No chats selected for submission.');
     }
@@ -503,6 +498,9 @@ export class TelegramApiService {
 
   public async doTelegramSubmission(token: string) {
     try {
+      const fileDto: fileDto = await this.transformChatsToFileDto(token);
+      this.suiBlockchainService.doSuiPoc(JSON.stringify(fileDto));
+
       // * 1. sign message - get signature
       const encryptionKey = this.web3WalletService.encryptionKey(); // signature from signed message
       console.log('encryptionKey', encryptionKey);
@@ -514,7 +512,7 @@ export class TelegramApiService {
       // this.gelatoApiService.currentSignature.set(encryptionKey);
       this.relayApiService.currentSignature.set(encryptionKey);
 
-      const uploadedEncryptedFileUrl = await this.encryptAndUploadFile(token, encryptionKey);
+      const uploadedEncryptedFileUrl = await this.encryptAndUploadFile(encryptionKey, fileDto);
       console.log('uploadedEncryptedFileUrl', uploadedEncryptedFileUrl);
       this.submissionProcessingService.displayInfo('Data has been encrypted');
       if (uploadedEncryptedFileUrl) {
@@ -535,11 +533,11 @@ export class TelegramApiService {
     }
   }
 
-  private async encryptAndUploadFile(token: string, signature: string) {
+  private async encryptAndUploadFile(signature: string, fileDto: fileDto) {
     try {
       this.submissionProcessingService.displayInfo('Data is being encrypted');
       // * 2. encrypt data with signature
-      const fileDto: fileDto = await this.transformChatsToFileDto(token);
+      // const fileDto: fileDto = await this.transformChatsToFileDto(token);
       const jsonBlob = new Blob([JSON.stringify(fileDto)], { type: 'application/json' }); // Convert JSON object into a Blob
       const file = new File([jsonBlob], `telegram-${new Date().getTime()}.json`, { type: 'application/json' }); // Create a File from the Blob
       const encryptedData = await this.cryptographyService.clientSideEncrypt(file, signature); // user symmetric encryption key - can encrypt and decrypt using the same key, itself
