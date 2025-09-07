@@ -65,7 +65,11 @@ export class WalrusService {
   private readonly appConfigService: AppConfigService = inject(AppConfigService);
   private readonly httpClient: HttpClient = inject(HttpClient);
 
-  constructor() {}
+  private epochs = 53;
+  
+  constructor() {
+    this.epochs = this.appConfigService?.walrus?.epochs || 53;
+  }
 
   /**
  * Upload a file to Walrus storage
@@ -87,14 +91,13 @@ export class WalrusService {
   
   public async uploadFileToWalrusViaRelay(encryptedData: File): Promise<string> {
     try {
-      const epochs = this.appConfigService.walrus!.epochs || 5;
       const relayUrl = this.appConfigService.relayApi!.baseUrl;
 
       const uploadUrl = `${relayUrl}/api/relay/walrus/upload`;
 
       const formData = new FormData();
       formData.append('file', encryptedData);
-      formData.append('epochs', epochs.toString());
+      formData.append('epochs', this.epochs.toString());
       
       const headers = new HttpHeaders({
         'x-api-key': this.appConfigService.relayApi!.apiKey || '',
@@ -128,10 +131,9 @@ export class WalrusService {
       }
 
       const publisherUrl = this.appConfigService.walrus.publisherUrl;
-      const epochs = this.appConfigService.walrus.epochs || 5;
 
       // Prepare the upload URL with epochs parameter
-      const uploadUrl = `${publisherUrl}/blobs?epochs=${epochs}`;
+      const uploadUrl = `${publisherUrl}/blobs?epochs=${this.epochs}`;
 
       // Prepare headers
       const headers = new HttpHeaders({

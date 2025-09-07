@@ -29,6 +29,8 @@ export class SuiBlockchainService {
   private walrusConfig: IWalrus | null;
   private suiAddress = signal<string>('');
   private keyServers = signal<string[]>([]);
+  private encryptionThreshold = 1;
+  private suiMovePackageId = '';
   
   public suiPublicKey = computed(() => this.suiAddress());
 
@@ -41,6 +43,8 @@ export class SuiBlockchainService {
   ) {
     this.pocConfig = this.appConfigService.suiPoc;
     this.walrusConfig = this.appConfigService.walrus;
+    this.encryptionThreshold = this.pocConfig?.threshold || 1;
+    this.suiMovePackageId = this.pocConfig?.packageId || '0xb77a4ba0d26b84eb23befb0d21eefd4901960da46aa2e80dc6a13613adcbcc6b'; // default to mainnet package
     // set up SUI client
     const network = this.pocConfig?.network || 'mainnet';
     this.suiClient = new SuiClient({ url: getFullnodeUrl(network) });
@@ -50,7 +54,7 @@ export class SuiBlockchainService {
     // this.keyServers.set(["0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75"]);
     
     // [https://seal-testnet.api.rubynodes.io/]
-    this.keyServers.set(this.pocConfig?.keyServers ?? ['0xda2f2fe7b82a6b734aedfe2d278f83a1db21d21a907dd8e6e19ce5e906b42afe']);
+    this.keyServers.set(this.pocConfig?.keyServers ?? ['0xda2f2fe7b82a6b734aedfe2d278f83a1db21d21a907dd8e6e19ce5e906b42afe']); // default to mainnet key server
     
     this.sealClient = new SealClient({
       suiClient: this.suiClient, 
@@ -80,7 +84,7 @@ export class SuiBlockchainService {
   public async createPolicyViaRelay(): Promise<string> {
     try {
       const requestBody = {
-        packageObjectId: this.pocConfig?.packageId || '',
+        packageObjectId: this.suiMovePackageId,
         dlpWalletAddress: this.pocConfig?.dlpWalletAddress || ''
       };
 
@@ -222,8 +226,8 @@ export class SuiBlockchainService {
       const id = toHex(new Uint8Array([...policyObjectBytes, ...nonce]));
 
       const { encryptedObject: encryptedBytes } = await this.sealClient.encrypt({
-        threshold: this.pocConfig?.threshold || 1,
-        packageId: this.pocConfig?.packageId || '',
+        threshold: this.encryptionThreshold,
+        packageId: this.suiMovePackageId,
         id,
         data: new Uint8Array(new TextEncoder().encode(teleChat)),
       });
@@ -264,7 +268,7 @@ export class SuiBlockchainService {
     const encryptedObject = EncryptedObject.parse(encryptedData);
     const onChainFileObjId = await this.saveEncryptedFileViaRelay(encryptedObject.id, policyObjId, metadata);
 
-    const processDataRes = await this.processDataWithWorker(blobId, onChainFileObjId, policyObjId, this.pocConfig?.threshold || 1);
+    const processDataRes = await this.processDataWithWorker(blobId, onChainFileObjId, policyObjId, this.encryptionThreshold);
     console.log('🚀 ~ Nautilus Processed data:', processDataRes?.data);
   }
 }
