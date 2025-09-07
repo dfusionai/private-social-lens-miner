@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { TelegramApiService } from './telegram-api.service';
-import { fileDto, IFileMetadata, IProcessDataRes } from '../models/social-truth';
+import { IFileMetadata, IProcessDataRes } from '../models/social-truth';
+// import { TelegramApiService } from './telegram-api.service';
 import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
 import { fromHex, toHex } from '@mysten/sui/utils';
 import { EncryptedObject, SealClient } from '@mysten/seal';
@@ -12,15 +12,15 @@ import { SubmissionProcessingService } from './submission-processing.service';
 import { ISuiPoc, IWalrus } from '../models/app-config';
 import { timeout, catchError, throwError, firstValueFrom } from 'rxjs';
 import { TIMEOUT_MS } from '../shared/constants';
-import { isElectron } from '../shared/helpers';
+// import { isElectron } from '../shared/helpers';
 import { ElectronIpcService } from './electron-ipc.service';
 
-declare const window: any;
+// declare const window: any;
 
 @Injectable({
   providedIn: 'root',
 })
-export class SuiPocService {
+export class SuiBlockchainService {
   private readonly httpClient: HttpClient = inject(HttpClient);
   private readonly httpService: HttpService = inject(HttpService);
   private suiClient: SuiClient;
@@ -33,7 +33,7 @@ export class SuiPocService {
   public suiPublicKey = computed(() => this.suiAddress());
 
   constructor(
-    private readonly telegramApiService: TelegramApiService,
+    // private readonly telegramApiService: TelegramApiService,
     private readonly walrusService: WalrusService,
     private readonly appConfigService: AppConfigService,
     private readonly submissionProcessingService: SubmissionProcessingService,
@@ -61,20 +61,20 @@ export class SuiPocService {
       verifyKeyServers: false,
     });
 
-    if (isElectron()) {
-      window.electron.onExecuteBackgroundTaskCode((event: any, message: any) => {
-        console.warn('Received message from main process:', message);
-        const currentDate = new Date();
-        const nextSubmissionTime = this.electronIpcService.nextSubmissionTime();
-        if (this.telegramApiService.isAuthorized) {
-          if (nextSubmissionTime && currentDate <= nextSubmissionTime) {
-            // this.doSuiPoc();
-          }
-        } else {
-          this.submissionProcessingService.setVanaProcessErr('Not signed in to Telegram. Sign in to continue.');
-        }
-      });
-    }
+    // if (isElectron()) {
+    //   window.electron.onExecuteBackgroundTaskCode((event: any, message: any) => {
+    //     console.warn('Received message from main process:', message);
+    //     const currentDate = new Date();
+    //     const nextSubmissionTime = this.electronIpcService.nextSubmissionTime();
+    //     if (this.telegramApiService.isAuthorized) {
+    //       if (!nextSubmissionTime || currentDate <= nextSubmissionTime) {
+    //         this.doSuiPoc();
+    //       }
+    //     } else {
+    //       this.submissionProcessingService.setVanaProcessErr('Not signed in to Telegram. Sign in to continue.');
+    //     }
+    //   });
+    // }
   }
 
   public async createPolicyViaRelay(): Promise<string> {
@@ -117,16 +117,16 @@ export class SuiPocService {
     }
   }
 
-  public async getTelechat(): Promise<string> {
-    try {
-      const fileDto: fileDto = await this.telegramApiService.transformChatsToFileDto('');
-      return JSON.stringify(fileDto);
-    } catch (err) {
-      console.error('Failed to get telechat', err);
-      this.submissionProcessingService.setSuiProcessErr('Failed to get chat info');
-      throw new Error('Failed to get telechat. Please try again.');
-    }
-  }
+  // public async getTelechat(): Promise<string> {
+  //   try {
+  //     const fileDto: fileDto = await this.telegramApiService.transformChatsToFileDto('');
+  //     return JSON.stringify(fileDto);
+  //   } catch (err) {
+  //     console.error('Failed to get telechat', err);
+  //     this.submissionProcessingService.setSuiProcessErr('Failed to get chat info');
+  //     throw new Error('Failed to get telechat. Please try again.');
+  //   }
+  // }
 
   public async saveEncryptedFileViaRelay(fileId: string, policyObjId: string, metadata: IFileMetadata): Promise<string> {
     try {
@@ -240,14 +240,15 @@ export class SuiPocService {
     }
   }
 
-  public async doSuiPoc() {
+  public async doSuiPoc(teleChat: string) {
     const policyObjId = await this.createPolicyViaRelay();
-    const teleChat = await this.getTelechat();
+    // const teleChat = await this.getTelechat();
     const encryptedBytes = await this.encryptData(policyObjId, teleChat);
 
-    let walrusUploadRes
+    let walrusUploadRes;
     try {
       walrusUploadRes = await this.walrusService.uploadFileToWalrus(new File([encryptedBytes], 'encryptedFile'));
+      // walrusUploadRes = await this.walrusService.uploadFileToWalrus(encryptedBytes);
     } catch (error) {
       this.submissionProcessingService.setSuiProcessErr('Failed to upload encrypted data to Walrus storage. Please try again.');
       throw new Error('Failed to upload encrypted data to Walrus storage. Please try again.');
