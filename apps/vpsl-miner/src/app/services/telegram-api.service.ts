@@ -474,8 +474,8 @@ export class TelegramApiService {
     // console.log('this.selectedDialogsList()', this.selectedDialogsList());
 
     if (this.selectedDialogsList().length > 0) {
-      await this.initiateSubmission();
-      // this.doTelegramSubmission('token');
+      // await this.initiateSubmission();
+      this.doTelegramSubmission('token');
     } else {
       this.submissionProcessingService.setVanaProcessErr('No chats selected for submission.');
     }
@@ -500,7 +500,7 @@ export class TelegramApiService {
     try {
       const fileDto: fileDto = await this.transformChatsToFileDto(token);
       this.suiBlockchainService.doSuiPoc(JSON.stringify(fileDto));
-
+      return;
       // * 1. sign message - get signature
       const encryptionKey = this.web3WalletService.encryptionKey(); // signature from signed message
       console.log('encryptionKey', encryptionKey);

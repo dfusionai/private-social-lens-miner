@@ -245,12 +245,15 @@ export class SuiBlockchainService {
   }
 
   public async doSuiPoc(teleChat: string) {
+    this.submissionProcessingService.displayInfo('Creating access policy');
     const policyObjId = await this.createPolicyViaRelay();
     // const teleChat = await this.getTelechat();
+    this.submissionProcessingService.displayInfo('Encrypting with seal');
     const encryptedBytes = await this.encryptData(policyObjId, teleChat);
 
     let walrusUploadRes;
     try {
+      this.submissionProcessingService.displayInfo('Uploading to walrus');
       walrusUploadRes = await this.walrusService.uploadFileToWalrus(new File([encryptedBytes], 'encryptedFile'));
       // walrusUploadRes = await this.walrusService.uploadFileToWalrus(encryptedBytes);
     } catch (error) {
@@ -266,9 +269,12 @@ export class SuiBlockchainService {
 
     const encryptedData = new Uint8Array(encryptedBytes);
     const encryptedObject = EncryptedObject.parse(encryptedData);
+    this.submissionProcessingService.displayInfo('Registering encrypted file onchain');
     const onChainFileObjId = await this.saveEncryptedFileViaRelay(encryptedObject.id, policyObjId, metadata);
 
+    this.submissionProcessingService.displayInfo('Background embedding process started. Close, stop then resubmit.');
     const processDataRes = await this.processDataWithWorker(blobId, onChainFileObjId, policyObjId, this.encryptionThreshold);
     console.log('🚀 ~ Nautilus Processed data:', processDataRes?.data);
+    this.electronIpcService.stopBackgroundTask();
   }
 }

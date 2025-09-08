@@ -86,10 +86,10 @@ export class MinerAppContainerComponent implements OnInit {
       // either 500 $VFSN staked OR 2500 $VFSN in your wallet
       const isNotAllowed = (totalVFSNStake || 0) < stakeThreshold && (vfsnBalance || 0) < balanceThreshold;
 
-      if (isNotAllowed) {
-        this.openTokenGatingDialog();
-        return;
-      }
+      // if (isNotAllowed) {
+      //   this.openTokenGatingDialog();
+      //   return;
+      // }
 
       this.router.navigate(['/app/ai-chat']);
       this.isAiChat = true;
