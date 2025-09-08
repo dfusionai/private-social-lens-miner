@@ -44,7 +44,7 @@ export class SuiBlockchainService {
     this.pocConfig = this.appConfigService.suiPoc;
     this.walrusConfig = this.appConfigService.walrus;
     this.encryptionThreshold = this.pocConfig?.threshold || 1;
-    this.suiMovePackageId = this.pocConfig?.packageId || '0xb77a4ba0d26b84eb23befb0d21eefd4901960da46aa2e80dc6a13613adcbcc6b'; // default to mainnet package
+    this.suiMovePackageId = this.pocConfig?.packageId || '0xd177e8fbb09c9700b186cbdeb049c665e7f519dacebd3f4b3ca226a7bf7fbd2e'; // default to mainnet package
     // set up SUI client
     const network = this.pocConfig?.network || 'mainnet';
     this.suiClient = new SuiClient({ url: getFullnodeUrl(network) });
