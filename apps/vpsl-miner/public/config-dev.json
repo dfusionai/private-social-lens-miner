@@ -76,9 +76,10 @@
     "suiScanUrl": "https://suiscan.xyz/testnet/object",
     "threshold": 1,
     "network": "testnet",
-    "keyServers": ["0x6068c0acb197dddbacd4746a9de7f025b2ed5a5b6c1b1ab44dade4426d141da2"]
+    "keyServers": ["0x6068c0acb197dddbacd4746a9de7f025b2ed5a5b6c1b1ab44dade4426d141da2"],
+    "policyObjectId": ""
   },
   "aiAgent": {
-    "aiAgentUrl": "localhost:3002/api/v1"
+    "aiAgentUrl": "http://localhost:3002/api/v1"
   }
 }

@@ -31,7 +31,8 @@ export class SuiBlockchainService {
   private keyServers = signal<string[]>([]);
   private encryptionThreshold = 1;
   private suiMovePackageId = '';
-  
+  private policyObjectId = '';
+
   public suiPublicKey = computed(() => this.suiAddress());
 
   constructor(
@@ -52,18 +53,20 @@ export class SuiBlockchainService {
     // [https://seal-key-server-testnet-1.mystenlabs.com, https://seal-key-server-testnet-2.mystenlabs.com]
     // this.keyServers.set(["0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75", "0xf5d14a81a982144ae441cd7d64b09027f116a468bd36e7eca494f750591623c8"]);
     // this.keyServers.set(["0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75"]);
-    
+
     // [https://seal-testnet.api.rubynodes.io/]
     this.keyServers.set(this.pocConfig?.keyServers ?? ['0xda2f2fe7b82a6b734aedfe2d278f83a1db21d21a907dd8e6e19ce5e906b42afe']); // default to mainnet key server
-    
+
     this.sealClient = new SealClient({
-      suiClient: this.suiClient, 
+      suiClient: this.suiClient,
       serverConfigs: this.keyServers().map((id) => ({
         objectId: id,
         weight: 1,
       })),
       verifyKeyServers: false,
     });
+
+    this.policyObjectId = this.pocConfig?.policyObjectId || '0xe7c735dc4579ecfa647c0c435c023579364f0bc0045cb1bbb8025222be07c60f';
 
     // if (isElectron()) {
     //   window.electron.onExecuteBackgroundTaskCode((event: any, message: any) => {
@@ -245,7 +248,8 @@ export class SuiBlockchainService {
   }
 
   public async doSuiPoc(teleChat: string) {
-    const policyObjId = await this.createPolicyViaRelay();
+    // const policyObjId = await this.createPolicyViaRelay();
+    const policyObjId = this.policyObjectId;
     // const teleChat = await this.getTelechat();
     const encryptedBytes = await this.encryptData(policyObjId, teleChat);
 
