@@ -25,6 +25,7 @@ export interface ISuiPoc {
   keyServers: string[];
   suiScanUrl: string;
   network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
+  policyObjectId: string;
 }
 export interface IDFusion {
   validatorBackendUrl: string;
