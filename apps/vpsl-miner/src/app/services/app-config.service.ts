@@ -1,6 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, share } from 'rxjs';
+import { firstValueFrom, map, share, switchMap } from 'rxjs';
 import { IAiAgent, IAppConfigItem, IDFusion, IGelato, IPinata, IRelayApi, IReownAppkit, ISuiPoc, ITelegram, IVana, IWalrus } from '../models/app-config';
 
 @Injectable({
@@ -83,8 +83,46 @@ export class AppConfigService {
           const vAppConfigItem: IAppConfigItem = response as IAppConfigItem;
           await this.setupAppWithConfigItem(vAppConfigItem);
         }),
+        switchMap(() => {
+          return this.getSuiSealClientConfig();
+        }),
       )
       .pipe(share())
       .toPromise();
+  }
+
+  private async getSuiSealClientConfig(): Promise<void> {
+    try {
+      if (!this.relayApi?.baseUrl) {
+        throw new Error('Relay url not configured');
+      }
+
+      const getConfigUrl = `${this.relayApi!.baseUrl}/api/relay/sui/client-config`;
+
+      const headers = new HttpHeaders({
+        'x-api-key': this.relayApi!.apiKey || '',
+      });
+
+      const response = await firstValueFrom(
+        this.httpClient.get<{ keyServers: Array<string>; movePackageId: string; policyObjectId: string }>(getConfigUrl, { headers }),
+      );
+      console.log('🔷 Get client config response', response);
+
+      if (!response) {
+        throw new Error('No response received from relay for sui/seal client config');
+      }
+      
+      if (this.suiPoc) {
+        this.suiPoc.policyObjectId = response.policyObjectId;
+        this.suiPoc.keyServers = response.keyServers;
+        this.suiPoc.packageId = response.movePackageId;
+      }
+      else {
+        throw new Error('suiPoc not configured');
+      }
+    } catch (error) {
+      console.error('Walrus upload via relay failed', error);
+      throw new Error('Failed to get sui/seal client config via relay.');
+    }
   }
 }
