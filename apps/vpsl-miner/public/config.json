@@ -75,7 +75,7 @@
     "suiScanUrl": "https://suiscan.xyz/mainnet/object",
     "threshold": 1,
     "network": "mainnet",
-    "keyServers": ["0xda2f2fe7b82a6b734aedfe2d278f83a1db21d21a907dd8e6e19ce5e906b42afe"],
+    "keyServers": ["0x1e315bb053724f57271b06a33c66bc7bc4acfcf2c4e4dc9b9b3fae8c13483cad"],
     "policyObjectId": "0xe7c735dc4579ecfa647c0c435c023579364f0bc0045cb1bbb8025222be07c60f"
   },
   "aiAgent": {

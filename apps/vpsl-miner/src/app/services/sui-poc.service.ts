@@ -1,6 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { IFileMetadata, IProcessDataRes } from '../models/social-truth';
-// import { TelegramApiService } from './telegram-api.service';
 import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
 import { fromHex, toHex } from '@mysten/sui/utils';
 import { EncryptedObject, SealClient } from '@mysten/seal';
@@ -12,10 +11,6 @@ import { SubmissionProcessingService } from './submission-processing.service';
 import { ISuiPoc, IWalrus } from '../models/app-config';
 import { timeout, catchError, throwError, firstValueFrom } from 'rxjs';
 import { TIMEOUT_MS } from '../shared/constants';
-// import { isElectron } from '../shared/helpers';
-import { ElectronIpcService } from './electron-ipc.service';
-
-// declare const window: any;
 
 @Injectable({
   providedIn: 'root',
@@ -28,7 +23,7 @@ export class SuiBlockchainService {
   private pocConfig: ISuiPoc | null;
   private walrusConfig: IWalrus | null;
   private suiAddress = signal<string>('');
-  private keyServers = signal<string[]>([]);
+  private keyServers: Array<string> = [];
   private encryptionThreshold = 1;
   private suiMovePackageId = '';
   private policyObjectId = '';
@@ -36,54 +31,55 @@ export class SuiBlockchainService {
   public suiPublicKey = computed(() => this.suiAddress());
 
   constructor(
-    // private readonly telegramApiService: TelegramApiService,
     private readonly walrusService: WalrusService,
     private readonly appConfigService: AppConfigService,
     private readonly submissionProcessingService: SubmissionProcessingService,
-    private readonly electronIpcService: ElectronIpcService,
   ) {
     this.pocConfig = this.appConfigService.suiPoc;
     this.walrusConfig = this.appConfigService.walrus;
     this.encryptionThreshold = this.pocConfig?.threshold || 1;
-    this.suiMovePackageId = this.pocConfig?.packageId || '0xd177e8fbb09c9700b186cbdeb049c665e7f519dacebd3f4b3ca226a7bf7fbd2e'; // default to mainnet package
+    
+    if (this.pocConfig?.packageId) {
+      this.suiMovePackageId = this.pocConfig?.packageId;
+      console.log('🔷 this.suiMovePackageId', this.suiMovePackageId);
+    }
+    else {
+      console.error('Sui move package id not configured');
+      throw new Error('Sui move package id not configured');
+    }
+    
+    if (this.pocConfig?.policyObjectId) {
+      this.policyObjectId = this.pocConfig?.policyObjectId;
+      console.log('🔷 this.policyObjectId', this.policyObjectId);
+    }
+    else {
+      console.error('Policy object id not configured');
+      throw new Error('Policy object id not configured');
+    }
+    
+    if (this.pocConfig?.keyServers) {
+      this.keyServers = this.pocConfig?.keyServers;
+      console.log('🔷 this.keyServers', this.keyServers);
+    }
+    else {
+      console.error('Seal key servers not configured');
+      throw new Error('Seal key servers not configured');
+    }
+    
     // set up SUI client
     const network = this.pocConfig?.network || 'mainnet';
     this.suiClient = new SuiClient({ url: getFullnodeUrl(network) });
-    // LATEST SEAL SDK does not work with key server object ids
-    // [https://seal-key-server-testnet-1.mystenlabs.com, https://seal-key-server-testnet-2.mystenlabs.com]
-    // this.keyServers.set(["0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75", "0xf5d14a81a982144ae441cd7d64b09027f116a468bd36e7eca494f750591623c8"]);
-    // this.keyServers.set(["0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75"]);
-
-    // [https://seal-testnet.api.rubynodes.io/]
-    this.keyServers.set(this.pocConfig?.keyServers ?? ['0xda2f2fe7b82a6b734aedfe2d278f83a1db21d21a907dd8e6e19ce5e906b42afe']); // default to mainnet key server
-
+    
     this.sealClient = new SealClient({
       suiClient: this.suiClient,
-      serverConfigs: this.keyServers().map((id) => ({
+      serverConfigs: this.keyServers.map((id) => ({
         objectId: id,
         weight: 1,
       })),
       verifyKeyServers: false,
     });
-
-    this.policyObjectId = this.pocConfig?.policyObjectId || '0xe7c735dc4579ecfa647c0c435c023579364f0bc0045cb1bbb8025222be07c60f';
-
-    // if (isElectron()) {
-    //   window.electron.onExecuteBackgroundTaskCode((event: any, message: any) => {
-    //     console.warn('Received message from main process:', message);
-    //     const currentDate = new Date();
-    //     const nextSubmissionTime = this.electronIpcService.nextSubmissionTime();
-    //     if (this.telegramApiService.isAuthorized) {
-    //       if (!nextSubmissionTime || currentDate <= nextSubmissionTime) {
-    //         this.doSuiPoc();
-    //       }
-    //     } else {
-    //       this.submissionProcessingService.setVanaProcessErr('Not signed in to Telegram. Sign in to continue.');
-    //     }
-    //   });
-    // }
   }
-
+  
   public async createPolicyViaRelay(): Promise<string> {
     try {
       const requestBody = {
@@ -123,17 +119,6 @@ export class SuiBlockchainService {
       throw new Error('Failed to create policy via relay service. Please try again.');
     }
   }
-
-  // public async getTelechat(): Promise<string> {
-  //   try {
-  //     const fileDto: fileDto = await this.telegramApiService.transformChatsToFileDto('');
-  //     return JSON.stringify(fileDto);
-  //   } catch (err) {
-  //     console.error('Failed to get telechat', err);
-  //     this.submissionProcessingService.setSuiProcessErr('Failed to get chat info');
-  //     throw new Error('Failed to get telechat. Please try again.');
-  //   }
-  // }
 
   public async saveEncryptedFileViaRelay(fileId: string, policyObjId: string, metadata: IFileMetadata): Promise<string> {
     try {
@@ -227,6 +212,7 @@ export class SuiBlockchainService {
       const policyObjectBytes = fromHex(policyObjId);
       const nonce = crypto.getRandomValues(new Uint8Array(5));
       const id = toHex(new Uint8Array([...policyObjectBytes, ...nonce]));
+      console.log('🔷 seal id', id);
 
       const { encryptedObject: encryptedBytes } = await this.sealClient.encrypt({
         threshold: this.encryptionThreshold,
@@ -272,6 +258,9 @@ export class SuiBlockchainService {
     const encryptedObject = EncryptedObject.parse(encryptedData);
     const onChainFileObjId = await this.saveEncryptedFileViaRelay(encryptedObject.id, policyObjId, metadata);
 
+    console.log('🔷 blobId', blobId);
+    console.log('🔷 onChainFileObjId', onChainFileObjId);
+    console.log('🔷 policyObjId', policyObjId);
     const processDataRes = await this.processDataWithWorker(blobId, onChainFileObjId, policyObjId, this.encryptionThreshold);
     console.log('🚀 ~ Nautilus Processed data:', processDataRes?.data);
   }
