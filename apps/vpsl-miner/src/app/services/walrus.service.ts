@@ -66,9 +66,16 @@ export class WalrusService {
   private readonly httpClient: HttpClient = inject(HttpClient);
 
   private epochs = 53;
+  private policyObjectId: string | undefined;
+  private movePackageId: string | undefined;
+  private keyServers: Array<string> | undefined;
   
   constructor() {
     this.epochs = this.appConfigService?.walrus?.epochs || 53;
+    // validated in sui-poc.service already
+    this.policyObjectId = this.appConfigService?.suiPoc?.policyObjectId;
+    this.movePackageId = this.appConfigService?.suiPoc?.packageId;
+    this.keyServers = this.appConfigService?.suiPoc?.keyServers;
   }
 
   /**
@@ -93,11 +100,14 @@ export class WalrusService {
     try {
       const relayUrl = this.appConfigService.relayApi!.baseUrl;
 
-      const uploadUrl = `${relayUrl}/api/relay/walrus/upload`;
-
+      const uploadUrl = `${relayUrl}/api/relay/walrus/upload-file`;
+      
       const formData = new FormData();
       formData.append('file', encryptedData);
       formData.append('epochs', this.epochs.toString());
+      formData.append('policyObjectId', this.policyObjectId!);
+      formData.append('movePackageId', this.movePackageId!);
+      formData.append('keyServers', JSON.stringify(this.keyServers!));
       
       const headers = new HttpHeaders({
         'x-api-key': this.appConfigService.relayApi!.apiKey || '',
