@@ -1,16 +1,17 @@
+import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { IFileMetadata, IProcessDataRes } from '../models/social-truth';
+import { EncryptedObject, SealClient } from '@mysten/seal';
 import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
 import { fromHex, toHex } from '@mysten/sui/utils';
-import { EncryptedObject, SealClient } from '@mysten/seal';
-import { WalrusService } from './walrus.service';
-import { HttpClient } from '@angular/common/http';
-import { HttpService } from './http.service';
-import { AppConfigService } from './app-config.service';
-import { SubmissionProcessingService } from './submission-processing.service';
+import { catchError, firstValueFrom, throwError, timeout } from 'rxjs';
 import { ISuiPoc, IWalrus } from '../models/app-config';
-import { timeout, catchError, throwError, firstValueFrom } from 'rxjs';
+import { fileDto, IFileMetadata, IProcessDataRes, ISubmissionResponse } from '../models/social-truth';
 import { TIMEOUT_MS } from '../shared/constants';
+import { AppConfigService } from './app-config.service';
+import { HttpService } from './http.service';
+import { SubmissionProcessingService } from './submission-processing.service';
+import { WalrusService } from './walrus.service';
+import { Web3WalletService } from './web3-wallet.service';
 
 @Injectable({
   providedIn: 'root',
@@ -34,11 +35,12 @@ export class SuiBlockchainService {
     private readonly walrusService: WalrusService,
     private readonly appConfigService: AppConfigService,
     private readonly submissionProcessingService: SubmissionProcessingService,
+    private readonly web3WalletService: Web3WalletService,
   ) {
     this.pocConfig = this.appConfigService.suiPoc;
     this.walrusConfig = this.appConfigService.walrus;
     this.encryptionThreshold = this.pocConfig?.threshold || 1;
-    
+
     if (this.pocConfig?.packageId) {
       this.suiMovePackageId = this.pocConfig?.packageId;
       console.log('🔷 this.suiMovePackageId', this.suiMovePackageId);
@@ -47,7 +49,7 @@ export class SuiBlockchainService {
       console.error('Sui move package id not configured');
       throw new Error('Sui move package id not configured');
     }
-    
+
     if (this.pocConfig?.policyObjectId) {
       this.policyObjectId = this.pocConfig?.policyObjectId;
       console.log('🔷 this.policyObjectId', this.policyObjectId);
@@ -56,7 +58,7 @@ export class SuiBlockchainService {
       console.error('Policy object id not configured');
       throw new Error('Policy object id not configured');
     }
-    
+
     if (this.pocConfig?.keyServers) {
       this.keyServers = this.pocConfig?.keyServers;
       console.log('🔷 this.keyServers', this.keyServers);
@@ -65,11 +67,11 @@ export class SuiBlockchainService {
       console.error('Seal key servers not configured');
       throw new Error('Seal key servers not configured');
     }
-    
+
     // set up SUI client
     const network = this.pocConfig?.network || 'mainnet';
     this.suiClient = new SuiClient({ url: getFullnodeUrl(network) });
-    
+
     this.sealClient = new SealClient({
       suiClient: this.suiClient,
       serverConfigs: this.keyServers.map((id) => ({
@@ -79,7 +81,7 @@ export class SuiBlockchainService {
       verifyKeyServers: false,
     });
   }
-  
+
   public async createPolicyViaRelay(): Promise<string> {
     try {
       const requestBody = {
@@ -192,7 +194,8 @@ export class SuiBlockchainService {
       this.submissionProcessingService.setSuiProcessDone();
       this.submissionProcessingService.setProcessedData({
         walrusUrl: `${this.walrusConfig?.aggregatorUrl}/blobs/${blobId}`,
-        unprocessedWalrusUrl: `${this.walrusConfig?.aggregatorUrl}/blobs/${blobId}`,
+        // unprocessedWalrusUrl: `${this.walrusConfig?.aggregatorUrl}/blobs/${blobId}`,
+        unprocessedWalrusUrl: `https://walruscan.com/mainnet/blob/${blobId}`,
         unprocessedOnChainFileUrl: `${this.pocConfig?.suiScanUrl}/${onChainFileObjId}`,
         attestationUrl: `${this.pocConfig?.suiScanUrl}/${onChainFileObjId}`,
         onChainFileUrl: `${this.pocConfig?.suiScanUrl}/${onChainFileObjId}`,
@@ -225,7 +228,7 @@ export class SuiBlockchainService {
         throw new Error('Failed to encrypt data');
       }
 
-      return encryptedBytes;
+      return { encryptedBytes, id };
     } catch (err) {
       this.submissionProcessingService.setSuiProcessErr('Failed to encrypt data');
       console.error('Failed to encrypt data', err);
@@ -233,35 +236,86 @@ export class SuiBlockchainService {
     }
   }
 
-  public async doSuiPoc(teleChat: string) {
-    // const policyObjId = await this.createPolicyViaRelay();
-    const policyObjId = this.policyObjectId;
-    // const teleChat = await this.getTelechat();
-    const encryptedBytes = await this.encryptData(policyObjId, teleChat);
+  // public async doSuiPoc(teleChat: string) {
+  //   // const policyObjId = await this.createPolicyViaRelay();
+  //   const policyObjId = this.policyObjectId;
+  //   const {encryptedBytes, id } = await this.encryptData(policyObjId, teleChat);
 
-    let walrusUploadRes;
-    try {
-      walrusUploadRes = await this.walrusService.uploadFileToWalrus(new File([encryptedBytes], 'encryptedFile'));
-      // walrusUploadRes = await this.walrusService.uploadFileToWalrus(encryptedBytes);
-    } catch (error) {
-      this.submissionProcessingService.setSuiProcessErr('Failed to upload encrypted data to Walrus storage. Please try again.');
-      throw new Error('Failed to upload encrypted data to Walrus storage. Please try again.');
+  //   let walrusUploadRes;
+  //   try {
+  //     console.log("💥 starting walrus upload");
+  //     walrusUploadRes = await this.walrusService.uploadFileToWalrus(new File([encryptedBytes], 'encryptedFile'));
+  //     // walrusUploadRes = await this.walrusService.uploadFileToWalrus(encryptedBytes);
+  //   } catch (error) {
+  //     console.error('walrus upload failed', error);
+  //     this.submissionProcessingService.setSuiProcessErr('Failed to upload encrypted data to Walrus storage. Please try again.');
+  //     throw new Error('Failed to upload encrypted data to Walrus storage. Please try again.');
+  //   }
+  //   console.log("💥 walrus upload finished");
+  //   const blobId = walrusUploadRes.split('/').pop() || '';
+
+  //   const metadata: IFileMetadata = {
+  //     walrusUrl: walrusUploadRes,
+  //     size: encryptedBytes.length,
+  //   };
+
+  //   const encryptedData = new Uint8Array(encryptedBytes);
+  //   const encryptedObject = EncryptedObject.parse(encryptedData);
+  //   const onChainFileObjId = await this.saveEncryptedFileViaRelay(encryptedObject.id, policyObjId, metadata);
+
+  //   console.log('🔷 blobId', blobId);
+  //   console.log('🔷 onChainFileObjId', onChainFileObjId);
+  //   console.log('🔷 policyObjId', policyObjId);
+  //   const processDataRes = await this.processDataWithWorker(blobId, onChainFileObjId, policyObjId, this.encryptionThreshold);
+  //   console.log('🚀 ~ Nautilus Processed data:', processDataRes?.data);
+  // }
+
+  public async batchQuilt(fileDto: fileDto) {
+    const { encryptedBytes, id } = await this.encryptData(this.policyObjectId, JSON.stringify(fileDto));
+
+    // Convert Uint8Array to base64 string
+    const encryptedDataBase64 = this.uint8ArrayToBase64(encryptedBytes);
+
+    // console.log('this.web3WalletService.walletAddress()', this.web3WalletService.walletAddress());
+    const submissionDto = {
+      encryptedData: encryptedDataBase64,
+      encryptionId: id,
+      submissionChatCount: fileDto.chats.length,
+      walletAddress: this.web3WalletService.walletAddress(),
     }
-    const blobId = walrusUploadRes.split('/').pop() || '';
 
-    const metadata: IFileMetadata = {
-      walrusUrl: walrusUploadRes,
-      size: encryptedBytes.length,
-    };
+    try {
+      const response = await firstValueFrom(this.httpService
+        .post<ISubmissionResponse>('submissions', submissionDto)
+        .pipe(
+          timeout(TIMEOUT_MS.THREE_MINUTES),
+          catchError((error) => {
+            if (error.name === 'TimeoutError') {
+              console.error('Request timed out after 3 minutes');
+              this.submissionProcessingService.setSuiProcessErr('Request timed out. Please try again.');
+              return throwError(() => new Error('Request timed out. Please try again.'));
+            }
+            return throwError(() => error);
+          }),
+        ));
 
-    const encryptedData = new Uint8Array(encryptedBytes);
-    const encryptedObject = EncryptedObject.parse(encryptedData);
-    const onChainFileObjId = await this.saveEncryptedFileViaRelay(encryptedObject.id, policyObjId, metadata);
+      if (!response || !response.submissionId) {
+        throw new Error('No response received from submission service');
+      }
 
-    console.log('🔷 blobId', blobId);
-    console.log('🔷 onChainFileObjId', onChainFileObjId);
-    console.log('🔷 policyObjId', policyObjId);
-    const processDataRes = await this.processDataWithWorker(blobId, onChainFileObjId, policyObjId, this.encryptionThreshold);
-    console.log('🚀 ~ Nautilus Processed data:', processDataRes?.data);
+      console.log('🚀 ~ Submission created:', response);
+      return response;
+    } catch (err) {
+      console.error('Failed to create submission', err);
+      throw new Error('Failed to create submission. Please try again.');
+    }
+  }
+
+  private uint8ArrayToBase64(uint8Array: Uint8Array): string {
+    let binary = '';
+    for (let i = 0; i < uint8Array.length; i++) {
+      binary += String.fromCharCode(uint8Array[i]);
+    }
+    return btoa(binary);
   }
 }

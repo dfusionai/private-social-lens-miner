@@ -42,3 +42,8 @@ export interface IFileMetadata {
   walrusUrl: string;
   size: number;
 }
+
+export interface ISubmissionResponse {
+  submissionId: string;
+  chatCount: number;
+}
