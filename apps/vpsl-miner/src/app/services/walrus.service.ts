@@ -69,7 +69,7 @@ export class WalrusService {
   private policyObjectId: string | undefined;
   private movePackageId: string | undefined;
   private keyServers: Array<string> | undefined;
-  
+
   constructor() {
     this.epochs = this.appConfigService?.walrus?.epochs || 53;
     // validated in sui-poc.service already
@@ -88,27 +88,27 @@ export class WalrusService {
       if (!this.appConfigService.walrus) {
         throw new Error('Walrus configuration is not available');
       }
-      
+
       return await this.uploadFileToWalrusViaRelay(encryptedData);
     } catch (error) {
       console.error('Walrus upload failed', error);
       throw new Error('Failed to upload encrypted data to Walrus storage. Please try again.');
     }
   }
-  
+
   public async uploadFileToWalrusViaRelay(encryptedData: File): Promise<string> {
     try {
       const relayUrl = this.appConfigService.relayApi!.baseUrl;
 
       const uploadUrl = `${relayUrl}/api/relay/walrus/upload-file`;
-      
+
       const formData = new FormData();
       formData.append('file', encryptedData);
       formData.append('epochs', this.epochs.toString());
       formData.append('policyObjectId', this.policyObjectId!);
       formData.append('movePackageId', this.movePackageId!);
       formData.append('keyServers', JSON.stringify(this.keyServers!));
-      
+
       const headers = new HttpHeaders({
         'x-api-key': this.appConfigService.relayApi!.apiKey || '',
       });
@@ -133,7 +133,7 @@ export class WalrusService {
       throw new Error('Failed to upload encrypted data to Walrus storage via relay. Please try again.');
     }
   }
-  
+
   public async uploadFileToWalrusViaPublisher(encryptedData: File): Promise<string> {
     try {
       if (!this.appConfigService.walrus) {
@@ -173,6 +173,80 @@ export class WalrusService {
     } catch (error) {
       console.error('Walrus upload failed', error);
       throw new Error('Failed to upload encrypted data to Walrus storage. Please try again.');
+    }
+  }
+
+  public async uploadFileToWalrusViaQuilt(encryptedData: File): Promise<void> {
+  try {
+      const publisherUrl = this.appConfigService.walrus!.publisherUrl;
+      console.log('publisherUrl', publisherUrl);
+      const uploadUrl = `${publisherUrl}/quilts?epochs=${this.epochs}`;
+      const metaData = [{"identifier": "quilt-telegram-test", "tags": {"owner": "dfusion-dev", "teleramID": "TODO_TELEGRAM_ID"}}];
+      // return;
+
+      const formData = new FormData();
+      formData.append('TODO_UNIQUE_file_identifier', encryptedData);
+      formData.append('_metadata', JSON.stringify(metaData));
+
+      const headers = new HttpHeaders({
+      // Example: 'x-api-key': 'YOUR_API_KEY'
+      });
+
+      const response = await firstValueFrom(this.httpClient.put<any>(uploadUrl, formData, { headers }));
+      console.log('Walrus upload via quilt response', response);
+
+      if (!response) {
+        throw new Error('No response received from Walrus quilt');
+      }
+
+      // const aggregatorUrl = this.appConfigService.walrus!.aggregatorUrl;
+      // return `${aggregatorUrl}/blobs/by-quilt-patch-id/${response[0].id}`;
+    } catch (error) {
+      console.error('Walrus upload via quilt failed', error);
+      throw new Error('Failed to upload encrypted data to Walrus storage via quilt. Please try again.');
+    }
+  }
+
+  /**
+   * Retrieve a blob from Walrus by Quilt Patch ID
+   * @param patchId Quilt patch ID / blobStoreResult.newlyCreated.blobObject.blobid
+   * @returns Blob
+   */
+  public async getBlobByQuiltPatchId(patchId: string): Promise<Blob> {
+    try {
+      const aggregatorUrl = this.appConfigService.walrus!.aggregatorUrl; // e.g. https://aggregator.walrus-testnet.walrus.space
+      const url = `${aggregatorUrl}/blobs/by-quilt-patch-id/${patchId}`;
+
+      const response = await firstValueFrom(
+        this.httpClient.get(url, { responseType: 'arraybuffer' })
+      );
+
+      return new Blob([response]);
+    } catch (error) {
+      console.error('Failed to fetch blob by quilt patch ID', error);
+      throw new Error('Failed to fetch blob from Walrus (patch ID).');
+    }
+  }
+
+  /**
+   * Retrieve a blob from Walrus by Quilt ID and Identifier
+   * @param quiltId Quilt ID / storedQuiltBlobs.quiltPatchId
+   * @param identifier Identifier of the file inside the quilt
+   * @returns Blob
+   */
+  public async getBlobByQuiltIdAndIdentifier(quiltId: string, identifier: string): Promise<Blob> {
+    try {
+      const aggregatorUrl = this.appConfigService.walrus!.aggregatorUrl;
+      const url = `${aggregatorUrl}/blobs/by-quilt-id/${quiltId}/${identifier}`;
+
+      const response = await firstValueFrom(
+        this.httpClient.get(url, { responseType: 'arraybuffer' })
+      );
+
+      return new Blob([response]);
+    } catch (error) {
+      console.error('Failed to fetch blob by quilt ID and identifier', error);
+      throw new Error('Failed to fetch blob from Walrus (quilt ID).');
     }
   }
 

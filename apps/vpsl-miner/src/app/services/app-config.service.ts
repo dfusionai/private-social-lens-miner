@@ -111,7 +111,7 @@ export class AppConfigService {
       if (!response) {
         throw new Error('No response received from relay for sui/seal client config');
       }
-      
+
       if (this.suiPoc) {
         this.suiPoc.policyObjectId = response.policyObjectId;
         this.suiPoc.keyServers = response.keyServers;
@@ -121,7 +121,7 @@ export class AppConfigService {
         throw new Error('suiPoc not configured');
       }
     } catch (error) {
-      console.error('Walrus upload via relay failed', error);
+      console.error('Failed to get sui/seal client config via relay.', error);
       throw new Error('Failed to get sui/seal client config via relay.');
     }
   }
