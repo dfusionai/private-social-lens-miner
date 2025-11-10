@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { EncryptedObject, SealClient } from '@mysten/seal';
+import { SealClient } from '@mysten/seal';
 import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
 import { fromHex, toHex } from '@mysten/sui/utils';
 import { catchError, firstValueFrom, throwError, timeout } from 'rxjs';
@@ -103,7 +103,6 @@ export class SuiBlockchainService {
           catchError((error) => {
             if (error.name === 'TimeoutError') {
               console.error('Request timed out');
-              this.submissionProcessingService.setSuiProcessErr('Request timed out. Please try again.');
               return throwError(() => new Error('Request timed out. Please try again.'));
             }
             return throwError(() => error);
@@ -117,7 +116,6 @@ export class SuiBlockchainService {
       return response.policyObjectId;
     } catch (err) {
       console.error('Failed to create policy via relay service', err);
-      this.submissionProcessingService.setSuiProcessErr('Failed to create policy via relay service');
       throw new Error('Failed to create policy via relay service. Please try again.');
     }
   }
@@ -144,7 +142,6 @@ export class SuiBlockchainService {
           catchError((error) => {
             if (error.name === 'TimeoutError') {
               console.error('Request timed out');
-              this.submissionProcessingService.setSuiProcessErr('Request timed out. Please try again.');
               return throwError(() => new Error('Request timed out. Please try again.'));
             }
             return throwError(() => error);
@@ -158,7 +155,6 @@ export class SuiBlockchainService {
       return response.onChainFileObjId;
     } catch (err) {
       console.error('Failed to save encrypted file via relay service', err);
-      this.submissionProcessingService.setSuiProcessErr('Failed to save encrypted file via relay service');
       throw new Error('Failed to save encrypted file via relay service. Please try again.');
     }
   }
@@ -180,7 +176,6 @@ export class SuiBlockchainService {
           catchError((error) => {
             if (error.name === 'TimeoutError') {
               console.error('Request timed out after 3 minutes');
-              this.submissionProcessingService.setSuiProcessErr('Request timed out. Please try again.');
               return throwError(() => new Error('Request timed out. Please try again.'));
             }
             return throwError(() => error);
@@ -191,20 +186,8 @@ export class SuiBlockchainService {
         throw new Error('No response received from worker');
       }
 
-      this.submissionProcessingService.setSuiProcessDone();
-      this.submissionProcessingService.setProcessedData({
-        walrusUrl: `${this.walrusConfig?.aggregatorUrl}/blobs/${blobId}`,
-        // unprocessedWalrusUrl: `${this.walrusConfig?.aggregatorUrl}/blobs/${blobId}`,
-        unprocessedWalrusUrl: `https://walruscan.com/mainnet/blob/${blobId}`,
-        unprocessedOnChainFileUrl: `${this.pocConfig?.suiScanUrl}/${onChainFileObjId}`,
-        attestationUrl: `${this.pocConfig?.suiScanUrl}/${onChainFileObjId}`,
-        onChainFileUrl: `${this.pocConfig?.suiScanUrl}/${onChainFileObjId}`,
-        policyObjectUrl: `${this.pocConfig?.suiScanUrl}/${policyObjectId}`,
-      });
-
       return response;
     } catch (err) {
-      this.submissionProcessingService.setSuiProcessErr('Oops! We couldn’t start processing your file. Please try again.');
       console.error('Failed to process data with worker', err);
       throw new Error('Failed to process data with worker. Please try again.');
     }
@@ -230,7 +213,6 @@ export class SuiBlockchainService {
 
       return { encryptedBytes, id };
     } catch (err) {
-      this.submissionProcessingService.setSuiProcessErr('Failed to encrypt data');
       console.error('Failed to encrypt data', err);
       throw new Error('Failed to encrypt data. Please try again.');
     }
@@ -292,7 +274,6 @@ export class SuiBlockchainService {
           catchError((error) => {
             if (error.name === 'TimeoutError') {
               console.error('Request timed out after 3 minutes');
-              this.submissionProcessingService.setSuiProcessErr('Request timed out. Please try again.');
               return throwError(() => new Error('Request timed out. Please try again.'));
             }
             return throwError(() => error);

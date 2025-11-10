@@ -526,8 +526,9 @@ export class TelegramApiService {
         throw new Error('Failed to submit encrypted data. Please try again.');
       }
     } catch (err: any) {
-      console.error('Failed to doTelegramSubmission');
-      this.submissionProcessingService.setVanaProcessErr(err);
+      console.error('Failed to doTelegramSubmission', err);
+      const errorMessage = err?.message || err?.toString() || 'Failed to submit data. Please try again.';
+      this.submissionProcessingService.setVanaProcessErr(errorMessage);
     }
   }
 
