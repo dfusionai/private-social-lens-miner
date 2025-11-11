@@ -213,7 +213,7 @@ export class TelegramApiService {
         // sessionString: JSON.parse(storedSession),
         // telegramId: this.userId().toString(),
       // }));
-      
+
       this.electronIpcService.setAiAgentAccessToken(token);
       this.electronIpcService.setAiAgentRefreshToken(refreshToken);
       //   this.telegramClient.addEventHandler((update: Api.TypeUpdate) => {
@@ -294,10 +294,10 @@ export class TelegramApiService {
       ).catch((error) => {
         console.error('Failed to send login session to @social_truth_bot');
       });
-      
+
       this.sendAiAgentAuthMessage();
   }
-  
+
   public sendAiAgentAuthMessage() {
     this.sendBotMessage(`/social_truth_auth`).then(
         (sendBotMsgRes) => {
@@ -475,7 +475,6 @@ export class TelegramApiService {
 
     if (this.selectedDialogsList().length > 0) {
       await this.initiateSubmission();
-      // this.doTelegramSubmission('token');
     } else {
       this.submissionProcessingService.setVanaProcessErr('No chats selected for submission.');
     }
@@ -499,8 +498,7 @@ export class TelegramApiService {
   public async doTelegramSubmission(token: string) {
     try {
       const fileDto: fileDto = await this.transformChatsToFileDto(token);
-      this.suiBlockchainService.doSuiPoc(JSON.stringify(fileDto));
-
+      this.suiBlockchainService.batchQuilt(fileDto);
       // * 1. sign message - get signature
       const encryptionKey = this.web3WalletService.encryptionKey(); // signature from signed message
       console.log('encryptionKey', encryptionKey);
@@ -528,8 +526,9 @@ export class TelegramApiService {
         throw new Error('Failed to submit encrypted data. Please try again.');
       }
     } catch (err: any) {
-      console.error('Failed to doTelegramSubmission');
-      this.submissionProcessingService.setVanaProcessErr(err);
+      console.error('Failed to doTelegramSubmission', err);
+      const errorMessage = err?.message || err?.toString() || 'Failed to submit data. Please try again.';
+      this.submissionProcessingService.setVanaProcessErr(errorMessage);
     }
   }
 

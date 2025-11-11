@@ -56,7 +56,11 @@ export class RelayApiService {
       this.submissionProcessingService.setVanaProcessDone(`Your submission scored ${this.submissionProcessingService.successRewardsAmount()} VFSN`);
     } catch (err: any) {
       console.error('Error relayAddFileWithPermissions:', err);
-      this.submissionProcessingService.setVanaProcessErr(ERROR_MSG_GENERAL);
+      // Only set error if it hasn't been set already (e.g., by initiateRequestReward)
+      if (!this.submissionProcessingService.isVanaSubmissionDone()) {
+        const errorMessage = err?.message || err?.toString() || ERROR_MSG_GENERAL;
+        this.submissionProcessingService.setVanaProcessErr(errorMessage);
+      }
     }
   }
 
@@ -138,8 +142,9 @@ export class RelayApiService {
         this.submissionProcessingService.setVanaProcessErr('The score for your data submission was below the acceptable limit. No rewards were awarded.');
       }
     } catch (err: any) {
-      this.submissionProcessingService.setVanaProcessErr(err);
-      throw new Error(err);
+      const errorMessage = err?.message || err?.toString() || ERROR_MSG_GENERAL;
+      this.submissionProcessingService.setVanaProcessErr(errorMessage);
+      throw err;
     }
   }
 
