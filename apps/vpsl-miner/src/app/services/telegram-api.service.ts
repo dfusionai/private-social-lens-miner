@@ -581,6 +581,11 @@ export class TelegramApiService {
             contents: [],
           } as chatDto),
       );
+
+    // Validate after filtering to ensure at least one non-bot chat is available
+    if (chatData.length === 0) {
+      throw new Error('No valid chats to submit. Please select chats other than the bot.');
+    }
     // console.log("chatData", chatData);
 
     // fetch data from telegram
