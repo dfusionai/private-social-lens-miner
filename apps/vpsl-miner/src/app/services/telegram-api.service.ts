@@ -442,13 +442,17 @@ export class TelegramApiService {
   public async initialisePreSelectedDialogs() {
     await this.getDialogs();
 
-    if (this.electronIpcService.selectedChatIdsList()?.length > 0) {
+    const selectedChatIds = this.electronIpcService.selectedChatIdsList();
+    if (selectedChatIds?.length > 0) {
       const preSelectedDialogs: Array<Dialog> = [];
-      this.telegramDialogs().forEach((telDialog) => {
-        if (this.electronIpcService.selectedChatIdsList().some((preSelected) => Number(preSelected) === Number(telDialog.id))) {
-          preSelectedDialogs.push(telDialog);
-        }
-      });
+      const telegramDialogs = this.telegramDialogs();
+      if (telegramDialogs) {
+        telegramDialogs.forEach((telDialog) => {
+          if (selectedChatIds.some((preSelected) => Number(preSelected) === Number(telDialog.id))) {
+            preSelectedDialogs.push(telDialog);
+          }
+        });
+      }
       this.selectedDialogsList.set(preSelectedDialogs);
     }
   }
@@ -458,16 +462,24 @@ export class TelegramApiService {
     await this.getDialogs();
 
     if (this.electronIpcService.isUploadAllChats()) {
-      const fullDialogList = [...this.telegramDialogs()];
-      this.selectedDialogsList.set(fullDialogList);
+      const telegramDialogs = this.telegramDialogs();
+      if (telegramDialogs) {
+        const fullDialogList: Array<Dialog> = [...telegramDialogs];
+        this.selectedDialogsList.set(fullDialogList);
+      } else {
+        this.selectedDialogsList.set([]);
+      }
     } else {
       const preSelectedDialogs = this.selectedDialogsList();
       const selectedDialogsForSubmission: Array<Dialog> = [];
-      this.telegramDialogs().forEach((telDialog) => {
-        if (preSelectedDialogs.some((preSelected) => Number(preSelected.id) === Number(telDialog.id))) {
-          selectedDialogsForSubmission.push(telDialog);
-        }
-      });
+      const telegramDialogs = this.telegramDialogs();
+      if (telegramDialogs && preSelectedDialogs) {
+        telegramDialogs.forEach((telDialog) => {
+          if (preSelectedDialogs.some((preSelected) => Number(preSelected.id) === Number(telDialog.id))) {
+            selectedDialogsForSubmission.push(telDialog);
+          }
+        });
+      }
       this.selectedDialogsList.set(selectedDialogsForSubmission);
       this.electronIpcService.setSelectedChatIdsList(selectedDialogsForSubmission.map((dialog) => Number(dialog.id)));
     }
@@ -551,19 +563,50 @@ export class TelegramApiService {
   }
 
   public async transformChatsToFileDto(token: string) {
-    const chatData = this.selectedDialogsList().map(
-      (telegramDialog) =>
-        ({
-          chat_id: Number(telegramDialog.id),
-          contents: [],
-        } as chatDto),
-    );
+    const selectedDialogs = this.selectedDialogsList();
+    if (selectedDialogs.length === 0) {
+      throw new Error('No chats selected. Please select at least one chat to continue.');
+    }
+
+    const botId = this.appConfigService.telegram!.botId ?? 7862527963;
+    const chatData = selectedDialogs
+      .filter((telegramDialog) => {
+        const chatId = Number(telegramDialog.id);
+        return chatId !== botId;
+      })
+      .map(
+        (telegramDialog) =>
+          ({
+            chat_id: Number(telegramDialog.id),
+            contents: [],
+          } as chatDto),
+      );
+
+    // Validate after filtering to ensure at least one non-bot chat is available
+    if (chatData.length === 0) {
+      throw new Error('No valid chats to submit. Please select chats other than the bot.');
+    }
     // console.log("chatData", chatData);
 
     // fetch data from telegram
     for (const c of chatData) {
-      const totalList: TotalList<Api.Message> = (await this.getMessages(c.chat_id)) as TotalList<Api.Message>;
-      c.contents = [...totalList]; // convert to array
+      try {
+        const totalList: TotalList<Api.Message> | null = await this.getMessages(c.chat_id);
+
+        if (!totalList) {
+          console.warn(`No messages found or failed to get messages for chat_id: ${c.chat_id}. Skipping this chat.`);
+          // Keep contents as empty array and continue to next chat
+          continue;
+        }
+
+        // Try to convert messages to array - if it fails, the catch block will handle it
+        c.contents = [...totalList];
+      } catch (err: unknown) {
+        // If we can't get or convert messages for this chat, log and skip it
+        console.warn(`Failed to process messages for chat_id: ${c.chat_id}. Skipping this chat.`, err);
+        // Keep contents as empty array and continue to next chat
+        continue;
+      }
     }
 
     const fileDto: fileDto = {
