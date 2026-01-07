@@ -1,52 +1,58 @@
-import { inject, Injectable, signal } from '@angular/core';
-import { PinataSDK, PinResponse, UploadOptions } from 'pinata-web3';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { AppConfigService } from './app-config.service';
+
+interface StorageUploadResponse {
+  url: string;
+  ipfsHash: string;
+  size: number;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class PinataApiService {
   private readonly appConfigService: AppConfigService = inject(AppConfigService);
+  private readonly http: HttpClient = inject(HttpClient);
 
-  public pinataSDK: PinataSDK;
-
-  constructor() {
-    this.pinataSDK = new PinataSDK({
-      pinataJwt: this.appConfigService.pinata?.jwt,
-      pinataGateway: this.appConfigService.pinata?.gatewayDomain,
-    })
+  private get relayBaseUrl(): string {
+    return this.appConfigService.relayApi?.baseUrl || '';
   }
 
-  public async uploadFileToPinata(encryptedData: any) {
-    const pinataUpload = (await this.submitPinataFile(encryptedData)) as PinResponse;
-    if (pinataUpload) {
-      // const fileUrl = retrieveFileUrl(pinataUpload);
-      const fileUrl = `${this.appConfigService.pinata?.fileBaseUrl}/${
-        pinataUpload.IpfsHash
-      }`;
-      return fileUrl;
+  /**
+   * Upload encrypted file to IPFS storage via the relay backend.
+   * The relay backend handles the actual Pinata upload.
+   *
+   * @param encryptedData - The encrypted file to upload
+   * @returns The public URL to the uploaded file
+   */
+  public async uploadFileToPinata(encryptedData: File | Blob): Promise<string> {
+    if (!this.relayBaseUrl) {
+      throw new Error('Relay API URL not configured');
     }
-    return '';
-  }
 
-  private async submitPinataFile(encryptedData: any) {
+    const formData = new FormData();
+    formData.append('file', encryptedData, 'encrypted-data');
+
     try {
-      // Upload the File to Pinata
-      const uploadOptions: UploadOptions = {
-        // metadata: {}
-      };
-      const upload = await this.pinataSDK.upload.file(encryptedData, uploadOptions);
-      return upload;
+      const response = await firstValueFrom(
+        this.http.post<StorageUploadResponse>(
+          `${this.relayBaseUrl}/api/relay/offchain-storage`,
+          formData
+        )
+      );
+
+      if (!response?.url) {
+        throw new Error('No URL returned from storage service');
+      }
+
+      return response.url;
     } catch (error) {
-      console.error('pinata upload failed', error);
+      console.error('Storage upload failed', error);
       throw new Error(
         'Failed to upload encrypted data to off-chain storage. Please try again.'
       );
     }
-  }
-
-  private async retrieveFileUrl(pinataUpload: PinResponse) {
-    const ipfsUrl = await this.pinataSDK.gateways.convert(pinataUpload.IpfsHash);
-    return ipfsUrl;
   }
 }

@@ -8,12 +8,6 @@
     "botId": 8158782279,
     "botUsername": "@vpsl_miner_bot"
   },
-  "pinata": {
-    "apiKey": "d0429ae73ec09fb6c791",
-    "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJhOGFhOGJhMC04NDE0LTQ3OGYtOWJhZC03OGEwYzZkYWU2M2QiLCJlbWFpbCI6InZhdWdobkBteXNvZnQuY28uemEiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiZDA0MjlhZTczZWMwOWZiNmM3OTEiLCJzY29wZWRLZXlTZWNyZXQiOiJmM2NlNGFhMmQzNDRmNDcwOGU4OGNlNGE0M2E0NzI3YjdjMjg3NGJmZDU2N2ZmYWYxOGFkY2QwYmUyMzM5MjQ1IiwiZXhwIjoxNzkxNTM1NzEyfQ.9-lDTU_doG5AOHtFUPYcV3s6G0DSdYai858JPOvfFC8",
-    "gatewayDomain": "emerald-historical-junglefowl-990.mypinata.cloud",
-    "fileBaseUrl": "https://gateway.pinata.cloud/ipfs"
-  },
   "vana": {
     "dlpSmartContractAddress": "0x308bFf8Ad48f11ff5692adE73B8Fd4af6aE9381d",
     "dataRegistrySmartContractAddress": "0x8C8788f98385F6ba1adD4234e551ABba0f82Cb7C",
@@ -24,9 +18,7 @@
     "dlpPublicKey": "0x4a5acfaed75c732d67f62ed8620e06482825b11001f266581f2abf790adc6cd9e2c1bbfdcaa8770b1c2e33bbf3b823a81fdf96591e21215fe1c6bf2968c5c6f4",
     "stakingSmartContractAddress": "0x9B9bD709844a3Fa34EfFAd67a7cB91d881ca4fA0",
     "vanaScanUrl": "https://moksha.vanascan.io",
-    "rpcUrl": "https://rpc.moksha.vana.org",
-    "refinementServiceUrl": "https://a7df0ae43df690b889c1201546d7058ceb04d21b-8000.dstack-prod5.phala.network/refine",
-    "refinerId": 116
+    "rpcUrl": "https://rpc.moksha.vana.org"
   },
   "cloudFlare": {
     "siteKey": "1x00000000000000000000AA"
