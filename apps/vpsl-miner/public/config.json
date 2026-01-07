@@ -8,12 +8,6 @@
     "botId": 7862527963,
     "botUsername": "@social_truth_bot"
   },
-  "pinata": {
-    "apiKey": "526a8af84c9b42ebd29f",
-    "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJhMDRlZWY2Yy1jMTM4LTQyNjMtYjg0ZC04Njk4OTMxNzE2OTUiLCJlbWFpbCI6InBhdHJpY2tAZGZ1c2lvbi5haSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI1MjZhOGFmODRjOWI0MmViZDI5ZiIsInNjb3BlZEtleVNlY3JldCI6IjVmYzkwNGE5Y2E0MWFjODc4OWJmY2FkZjg1ZTQ0ZDdlNThmY2JiNTAxYTMyMTQ4YWY2N2I1ZWQzZGVmYjNjNjQiLCJleHAiOjE3ODA1ODYxMjh9.Msx_y2k-TxQpIRyhSzAiixZnW7ZvT5D3QPag7lmZrkY",
-    "gatewayDomain": "copper-tricky-skunk-461.mypinata.cloud",
-    "fileBaseUrl": "https://dfusion-social-lens.mypinata.cloud/ipfs"
-  },
   "vana": {
     "dlpSmartContractAddress": "0x999383DBAFF7064aA68Ee785412710846523e728",
     "dataRegistrySmartContractAddress": "0x8C8788f98385F6ba1adD4234e551ABba0f82Cb7C",

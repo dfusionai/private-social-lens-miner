@@ -3,7 +3,6 @@ import { AppKitNetwork } from '@reown/appkit/networks';
 export interface IAppConfigItem {
   dFusion: IDFusion;
   telegram: ITelegram;
-  pinata: IPinata;
   walrus: IWalrus;
   vana: IVana;
   cloudFlare: ICloudFlare;
@@ -37,14 +36,6 @@ export interface ITelegram {
   botToken: string;
   botId: number;
   botUsername: string;
-}
-
-export interface IPinata {
-  apiKey: string;
-  jwt: string;
-  apiSecret: string;
-  gatewayDomain: string;
-  fileBaseUrl: string;
 }
 
 export interface IVana {
