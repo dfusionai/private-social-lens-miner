@@ -38,7 +38,7 @@ export class PinataApiService {
     try {
       const response = await firstValueFrom(
         this.http.post<StorageUploadResponse>(
-          `${this.relayBaseUrl}/api/relay/ipfs`,
+          `${this.relayBaseUrl}/api/relay/offchain-storage`,
           formData
         )
       );
