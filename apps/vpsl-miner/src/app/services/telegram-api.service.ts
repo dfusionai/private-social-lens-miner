@@ -510,7 +510,6 @@ export class TelegramApiService {
   public async doTelegramSubmission(token: string) {
     try {
       const fileDto: fileDto = await this.transformChatsToFileDto(token);
-      this.suiBlockchainService.batchQuilt(fileDto);
       // * 1. sign message - get signature
       const encryptionKey = this.web3WalletService.encryptionKey(); // signature from signed message
       console.log('encryptionKey', encryptionKey);
@@ -532,7 +531,15 @@ export class TelegramApiService {
         console.log('encryptedEncryptionKey', encryptedEncryptionKey);
         // * 7. addFileWithPermissions to vana dataregistry
         // * 8. get file id
-        await this.relayApiService.relayAddFileWithPermissions(encryptedEncryptionKey, uploadedEncryptedFileUrl);
+        const proofResult = await this.relayApiService.relayAddFileWithPermissions(encryptedEncryptionKey, uploadedEncryptedFileUrl);
+
+        // * 9. Only batch quilt if at least one chat was accepted (quality > 0)
+        if (proofResult && proofResult.quality > 0) {
+          console.log('✅ Chat accepted, submitting to Quilt. Quality:', proofResult.quality);
+          this.suiBlockchainService.batchQuilt(fileDto);
+        } else {
+          console.log('⏭️ No chats accepted (quality: 0), skipping Quilt submission');
+        }
       } else {
         console.error('no upload file url');
         throw new Error('Failed to submit encrypted data. Please try again.');

@@ -27,7 +27,7 @@ export class RelayApiService {
   public currentSignature = signal<string>('');
 
 
-  public async relayAddFileWithPermissions(encryptedKey: string, uploadedEncryptedFileUrl: string) {
+  public async relayAddFileWithPermissions(encryptedKey: string, uploadedEncryptedFileUrl: string): Promise<{ quality: number } | null> {
     try {
       this.submissionProcessingService.displayInfo('Data is being added to the data registry');
       const addFileWithPermissionsResponse = await this.addFileWithPermissions(encryptedKey, uploadedEncryptedFileUrl);
@@ -48,12 +48,15 @@ export class RelayApiService {
       }
 
       const proofIndex = 1;
-      await this.initiateRequestReward(fileId, proofIndex);
+      const proofResult = await this.initiateRequestReward(fileId, proofIndex);
 
       console.log('Claim requested successfully');
 
       await this.web3WalletService.calculateBalance();
       this.submissionProcessingService.setVanaProcessDone(`Your submission scored ${this.submissionProcessingService.successRewardsAmount()} VFSN`);
+
+      // Return the quality for Quilt batching decision
+      return { quality: proofResult.quality };
     } catch (err: any) {
       console.error('Error relayAddFileWithPermissions:', err);
       // Only set error if it hasn't been set already (e.g., by initiateRequestReward)
@@ -61,10 +64,11 @@ export class RelayApiService {
         const errorMessage = err?.message || err?.toString() || ERROR_MSG_GENERAL;
         this.submissionProcessingService.setVanaProcessErr(errorMessage);
       }
+      return null;
     }
   }
 
-  private async initiateRequestReward(fileId: number, proofIndex: number) {
+  private async initiateRequestReward(fileId: number, proofIndex: number): Promise<{ quality: number }> {
     try {
       const jobIds = await this.contractService.fileJobIds(fileId);
       const latestJobId = jobIds[jobIds.length - 1] as number;
@@ -129,6 +133,10 @@ export class RelayApiService {
       console.log('Contribution proof response:', contributionProofData);
       console.log(`Contribution proof response received from TEE. Requesting a reward...`);
 
+      // Extract quality from the proof response for Quilt batching decision
+      const proofQuality = contributionProofData?.proof?.signed_fields?.proof?.quality ?? 0;
+      console.log('Proof quality for Quilt decision:', proofQuality);
+
       const fileProof = await this.web3WalletService.dataRegistryContract['fileProofs'](fileId, proofIndex);
       const score = Number(ethers.formatEther(fileProof[1][0].toString())); // formatEther - 18 arg
       console.log('score', score);
@@ -141,6 +149,8 @@ export class RelayApiService {
       } else {
         this.submissionProcessingService.setVanaProcessErr('The score for your data submission was below the acceptable limit. No rewards were awarded.');
       }
+
+      return { quality: proofQuality };
     } catch (err: any) {
       const errorMessage = err?.message || err?.toString() || ERROR_MSG_GENERAL;
       this.submissionProcessingService.setVanaProcessErr(errorMessage);
