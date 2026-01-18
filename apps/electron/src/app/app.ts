@@ -33,7 +33,7 @@ export default class App {
   static nextSubmissionTime = null;
   static enableAutoLaunch = true;
   static minimizeToTray = true;
-  static uploadFrequency = 4;
+  static uploadFrequency = 24;
   static telegramSession = '';
   static checkForUpdate = false; // manual check for updates
   static aiAgentAccessToken = '';
@@ -142,7 +142,13 @@ export default class App {
     App.nextSubmissionTime = store.get('nextSubmissionTime') || null;
     App.enableAutoLaunch = store.get('enableAutoLaunch') ?? true;
     App.minimizeToTray = store.get('minimizeToTray') ?? true;
-    App.uploadFrequency = store.get('uploadFrequency') ?? 4;
+    App.uploadFrequency = store.get('uploadFrequency') ?? 24;
+    // Migrate old frequency values (4, 6, 8, 12) to minimum of 24
+    if (App.uploadFrequency < 24) {
+      App.uploadFrequency = 24;
+      store.set('uploadFrequency', 24);
+      console.log('main process: migrated uploadFrequency to 24 (minimum value)');
+    }
     App.telegramSession = store.get('telegramSession') ?? '';
     App.aiAgentAccessToken = store.get('aiAgentAccessToken') ?? '';
     App.aiAgentRefreshToken = store.get('aiAgentRefreshToken') ?? '';

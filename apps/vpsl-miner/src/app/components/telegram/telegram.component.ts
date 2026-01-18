@@ -25,7 +25,7 @@ export class TelegramComponent {
   public showCodeError = false;
   public readonly showTelegramError: WritableSignal<boolean> = this.telegramApiService.showTelegramError;
 
-  public uploadFrequencyList = [4, 6, 8, 12, 24];
+  public uploadFrequencyList = [24, 32, 40, 48];
   public selectedFrequency: WritableSignal<number>;
   public isUploadAllChats: WritableSignal<boolean>;
   public isBackgroundTaskEnabled: WritableSignal<boolean>;
