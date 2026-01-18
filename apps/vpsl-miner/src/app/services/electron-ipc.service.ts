@@ -24,7 +24,7 @@ export class ElectronIpcService {
   public isAutoLaunchEnabled = signal<boolean>(true);
   public minimizeToTray = signal<boolean>(true);
   public backgroundTaskIntervalExists = signal<boolean>(false);
-  public uploadFrequency = signal<number>(4);
+  public uploadFrequency = signal<number>(24);
   public telegramSession = signal<string>('');
   public appVersion = signal<string>('');
   public checkForUpdate = signal<boolean>(false);
@@ -91,8 +91,14 @@ export class ElectronIpcService {
     console.log('init backgroundTaskIntervalExists', backgroundTaskIntervalExists);
     this.backgroundTaskIntervalExists.set(backgroundTaskIntervalExists);
 
-    const uploadFrequency = await window.electron.getUploadFrequency();
+    let uploadFrequency = await window.electron.getUploadFrequency();
     console.log('init uploadFrequency', uploadFrequency);
+    // Migrate old frequency values (4, 6, 8, 12) to minimum of 24
+    if (uploadFrequency < 24) {
+      uploadFrequency = 24;
+      window.electron.setUploadFrequency(uploadFrequency);
+      console.log('migrated uploadFrequency to 24 (minimum value)');
+    }
     this.uploadFrequency.set(uploadFrequency);
 
     const telegramSession = await window.electron.getTelegramSession();
