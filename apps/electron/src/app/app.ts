@@ -148,6 +148,13 @@ export default class App {
       App.uploadFrequency = 24;
       store.set('uploadFrequency', 24);
       console.log('main process: migrated uploadFrequency to 24 (minimum value)');
+      // Recalculate nextSubmissionTime based on new frequency
+      if (App.lastSubmissionTime) {
+        const nextDate = new Date(new Date(App.lastSubmissionTime).getTime() + App.uploadFrequency * 60 * 60 * 1000);
+        App.nextSubmissionTime = nextDate;
+        store.set('nextSubmissionTime', nextDate);
+        console.log('main process: recalculated nextSubmissionTime:', nextDate);
+      }
     }
     App.telegramSession = store.get('telegramSession') ?? '';
     App.aiAgentAccessToken = store.get('aiAgentAccessToken') ?? '';

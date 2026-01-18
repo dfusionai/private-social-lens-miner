@@ -98,8 +98,13 @@ export class ElectronIpcService {
       uploadFrequency = 24;
       window.electron.setUploadFrequency(uploadFrequency);
       console.log('migrated uploadFrequency to 24 (minimum value)');
+      // Recalculate nextSubmissionTime based on new frequency (matches selectFrequency behavior)
+      this.uploadFrequency.set(uploadFrequency);
+      this.updateNextSubmissionTime();
+      console.log('recalculated nextSubmissionTime for new frequency');
+    } else {
+      this.uploadFrequency.set(uploadFrequency);
     }
-    this.uploadFrequency.set(uploadFrequency);
 
     const telegramSession = await window.electron.getTelegramSession();
     console.log('init telegramSession', telegramSession);
