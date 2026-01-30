@@ -10,7 +10,6 @@ import { ContractService } from './contract.service';
 import { ElectronIpcService } from './electron-ipc.service';
 import { SubmissionProcessingService } from './submission-processing.service';
 import { Web3WalletService } from './web3-wallet.service';
-import { RefinementApiService } from './refinement-api.service';
 
 @Injectable({
   providedIn: 'root',
@@ -22,7 +21,6 @@ export class RelayApiService {
   private readonly submissionProcessingService: SubmissionProcessingService = inject(SubmissionProcessingService);
   private readonly electronIpcService: ElectronIpcService = inject(ElectronIpcService);
   private readonly httpClient: HttpClient = inject(HttpClient);
-  private readonly refinementApiService: RefinementApiService = inject(RefinementApiService);
 
   public currentSignature = signal<string>('');
 
@@ -118,15 +116,6 @@ export class RelayApiService {
       }
 
       this.electronIpcService.updateLastSubmissionTime();
-
-      try {
-        console.log('Starting data refinement process');
-        const refinementResult = await this.refinementApiService.callRefinementService(fileId, this.currentSignature());
-        console.log(`Data refinement complete. Transaction hash: ${refinementResult.add_refinement_tx_hash}`);
-      } catch (refinementError) {
-        // Continue with the normal flow, don't fail the submission
-        console.error('Failed to refine data:', refinementError);
-      }
 
       this.submissionProcessingService.displayInfo('Your data has been verified and attested. Claiming your reward');
 
