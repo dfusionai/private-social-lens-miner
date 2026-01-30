@@ -8,7 +8,6 @@ import { ethers, TransactionReceipt } from 'ethers';
 import { SubmissionProcessingService } from './submission-processing.service';
 import { ContractService } from './contract.service';
 import { ElectronIpcService } from './electron-ipc.service';
-import { RefinementApiService } from './refinement-api.service';
 
 import DataRegistryImplementationABI from '../assets/contracts/DataRegistryImplementation.json';
 
@@ -21,7 +20,6 @@ export class GelatoApiService {
   private readonly submissionProcessingService: SubmissionProcessingService = inject(SubmissionProcessingService);
   private readonly contractService: ContractService = inject(ContractService);
   private readonly electronIpcService: ElectronIpcService = inject(ElectronIpcService);
-  private readonly refinementApiService: RefinementApiService = inject(RefinementApiService);
 
   private gelatoRelay = new GelatoRelay();
   public currentTaskType = signal<GelatoTaskRelay>(GelatoTaskRelay.NONE);
@@ -248,16 +246,6 @@ export class GelatoApiService {
       }
 
       this.electronIpcService.updateLastSubmissionTime();
-
-      // Call refinement service after successful RunProof
-      try {
-        console.log('Starting data refinement process');
-        const refinementResult = await this.refinementApiService.callRefinementService(this.currentSubmissionFileId(), this.currentSignature());
-        console.log(`Data refinement complete. Transaction hash: ${refinementResult.add_refinement_tx_hash}`);
-      } catch (refinementError) {
-        // Continue with the normal flow, don't fail the submission
-        console.error('Failed to refine data:', refinementError);
-      }
 
       this.submissionProcessingService.displayInfo('Your data has been verified and attested. Claiming your reward');
 
